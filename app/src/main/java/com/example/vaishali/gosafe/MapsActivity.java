@@ -1,11 +1,13 @@
 package com.example.vaishali.gosafe;
 
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.util.SparseArray;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -19,8 +21,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -51,62 +57,65 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng sydney = new LatLng(-34, 151);
+        LatLng coordinates = new LatLng(-34, 151);
+
+        mMap.addMarker(new MarkerOptions().position(coordinates).title("Markers"));
         try {
-            sydney = getCoordinates();
+            putCustomMarkers();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney").icon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons("police", 100, 100))));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(coordinates));
     }
 
-    private void moveToCurrentLocation(GoogleMap googleMap, LatLng currentLocation) {
-        googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 15));
-        // Zoom in, animating the camera.
-        googleMap.animateCamera(CameraUpdateFactory.zoomIn());
-        // Zoom out to zoom level 10, animating with a duration of 2 seconds.
-        googleMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
-    }
+    private void putCustomMarkers() throws IOException {
+        Map<String, List<String>> issuesAndAddresses = getIssuesAndAddresses();
+        for (String issue : issuesAndAddresses.keySet()) {
+            for (String address : issuesAndAddresses.get(issue)) {
 
-    public List<File> listFilesForFolder(final File folder, List<File> fileList) {
-        for (final File fileEntry : folder.listFiles()) {
-            if (fileEntry.isDirectory()) {
-                listFilesForFolder(fileEntry, fileList);
-            } else {
-                fileList.add(fileEntry);
+                mMap.addMarker(new MarkerOptions().position(getCoordinatesFromAddress(address)).title(issue + " markers")
+                        .icon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons(issue, 100, 100))));
             }
         }
-        return fileList;
     }
 
-    private void getCoordinatesAndType() throws IOException {
-        List<File> fileList = listFilesForFolder(new File("C:\\Users\\Vaishali\\AndroidStudioProjects\\SafeNav\\data"), new ArrayList<File>());
-        for (File fileName : fileList) {
-            BufferedReader br = new BufferedReader(new FileReader(fileName));
-
-            String st;
-            while ((st = br.readLine()) != null)
-                System.out.println(st);
+    private Map<String, List<String>> getIssuesAndAddresses() throws IOException {
+        Map<String, List<String>> result = new HashMap<>();
+        Map<Integer, String> resourceIdToIssue = new HashMap<>();
+        resourceIdToIssue.put(R.raw.accident, "accident");
+        resourceIdToIssue.put(R.raw.police, "police");
+        resourceIdToIssue.put(R.raw.harrasment, "harrasment");
+        resourceIdToIssue.put(R.raw.theft, "theft");
+        resourceIdToIssue.put(R.raw.light, "light");
+        Resources r = getResources();
+        for (int id : resourceIdToIssue.keySet()) {
+            InputStream in = r.openRawResource(id);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            List<String> addressList = new ArrayList<>();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                addressList.add(line);
+            }
+            result.put(resourceIdToIssue.get(id), addressList);
         }
+        return result;
     }
 
     public Bitmap resizeMapIcons(String iconName, int width, int height) {
         Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), getResources().getIdentifier(iconName, "drawable", getPackageName()));
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(imageBitmap, width, height, false);
-        return resizedBitmap;
+        return Bitmap.createScaledBitmap(imageBitmap, width, height, false);
     }
 
-    private LatLng getCoordinates() throws IOException {
+    private LatLng getCoordinatesFromAddress(String address) throws IOException {
         Geocoder geocoder = new Geocoder(this);
         List<Address> addresses;
-        addresses = geocoder.getFromLocationName("No. 21, Hosur Road, Koramangala, Bengaluru, Karnataka 560095", 1);
+        addresses = geocoder.getFromLocationName(address, 1);
         if (addresses.size() > 0) {
             double latitude = addresses.get(0).getLatitude();
             double longitude = addresses.get(0).getLongitude();
+            System.out.println("lat lang" + latitude + " " + longitude);
             return new LatLng(latitude, longitude);
         }
-        return new LatLng(-34, 151);
+        return new LatLng(0, 0);  // set it to some default value accordingly.
     }
 }
