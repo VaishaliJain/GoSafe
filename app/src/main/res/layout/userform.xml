@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        tools:padding="20dp">
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mark this area :" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_column="0"
+            android:layout_row="6">
+
+            <CheckBox
+                android:id="@+id/accident"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentTop="true"
+                android:layout_marginLeft="15dp"
+                android:layout_marginStart="15dp"
+                android:layout_marginTop="79dp"
+                android:text="Prone to accidents" />
+
+            <CheckBox
+                android:id="@+id/harrassment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/accident"
+                android:layout_alignStart="@+id/accident"
+                android:layout_below="@+id/accident"
+                android:layout_marginTop="24dp"
+                android:text="Harrassments" />
+
+            <CheckBox
+                android:id="@+id/light"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/harrassment"
+                android:layout_alignStart="@+id/harrassment"
+                android:layout_below="@+id/harrassment"
+                android:layout_marginTop="23dp"
+                android:text="Presense of street lights" />
+
+            <CheckBox
+                android:id="@+id/police"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/light"
+                android:layout_alignStart="@+id/light"
+                android:layout_below="@+id/light"
+                android:layout_marginTop="22dp"
+                android:text="Police nearby" />
+
+            <CheckBox
+                android:id="@+id/theft"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/police"
+                android:layout_alignStart="@+id/police"
+                android:layout_below="@+id/police"
+                android:layout_marginTop="27dp"
+                android:text="Unsafe to carry valuables" />
+
+            <Button
+                android:id="@+id/submit"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignLeft="@+id/theft"
+                android:layout_alignStart="@+id/theft"
+                android:layout_below="@+id/theft"
+                android:layout_marginTop="34dp"
+                android:text="Submit" />
+
+            <CheckBox
+                android:id="@+id/Safe"
+                android:layout_width="100dp"
+                android:layout_height="wrap_content"
+                android:layout_alignEnd="@+id/submit"
+                android:layout_alignParentTop="true"
+                android:layout_alignRight="@+id/submit"
+                android:layout_column="0"
+                android:layout_marginTop="12dp"
+                android:layout_row="1"
+                android:text="Safe" />
+
+            <CheckBox
+                android:id="@+id/Unsafe"
+                android:layout_width="104dp"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/Safe"
+                android:layout_alignBottom="@+id/Safe"
+                android:layout_alignParentEnd="true"
+                android:layout_alignParentRight="true"
+                android:layout_column="4"
+                android:layout_row="1"
+                android:text="Unsafe" />
+
+            <Button
+                android:id="@+id/cancel"
+                style="@style/Widget.AppCompat.Button.Colored"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/submit"
+                android:layout_alignLeft="@+id/Unsafe"
+                android:layout_alignStart="@+id/Unsafe"
+                android:text="Cancel" />
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/Safe"
+                android:layout_centerHorizontal="true"
+                android:text="Please mark correct options:" />
+
+        </RelativeLayout>
+
+    </GridLayout>
+
+</LinearLayout>

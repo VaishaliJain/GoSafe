@@ -84,6 +84,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        mMap.setOnMapClickListener(this);
     }
 
     private String getAddressFromLatLng( LatLng latLng ) {
@@ -108,6 +110,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         options.icon( BitmapDescriptorFactory.defaultMarker() );
         mMap.addMarker( options );
+        this.setContentView(R.layout.userform);
     }
     private LocationListener mLocationListener = new LocationListener() {
         @Override
