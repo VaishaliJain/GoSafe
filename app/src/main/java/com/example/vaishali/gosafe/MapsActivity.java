@@ -16,6 +16,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -23,6 +26,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.io.BufferedReader;
@@ -37,10 +41,14 @@ import java.util.logging.Logger;
 
 import static android.app.PendingIntent.getActivity;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener, View.OnClickListener,
+        GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
+    private Button submitReviewButton;
+    private Button cancelReviewButton;
+    private MarkerOptions reviewMarker;
     public static final int LOCATION_UPDATE_MIN_DISTANCE = 10;
     public static final int LOCATION_UPDATE_MIN_TIME = 5000;
     private static final int INITIAL_REQUEST = 1337;
@@ -76,7 +84,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         getCurrentLocationAndMarkIt();
 
         try {
@@ -86,17 +93,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         mMap.setOnMapClickListener(this);
+        mMap.setOnMarkerClickListener(this);
     }
 
-    private String getAddressFromLatLng( LatLng latLng ) {
-        Geocoder geocoder = new Geocoder( this );
+    private String getAddressFromLatLng(LatLng latLng) {
+        Geocoder geocoder = new Geocoder(this);
 
         String address = "";
         try {
             address = geocoder
-                    .getFromLocation( latLng.latitude, latLng.longitude, 1 )
-                    .get( 0 ).getAddressLine( 0 );
-        } catch (IOException e ) {
+                    .getFromLocation(latLng.latitude, latLng.longitude, 1)
+                    .get(0).getAddressLine(0);
+        } catch (IOException e) {
         }
 
         return address;
@@ -105,13 +113,41 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapClick(LatLng latLng) {
 
-        MarkerOptions options = new MarkerOptions().position( latLng );
-        options.title( getAddressFromLatLng( latLng ) );
+        reviewMarker = new MarkerOptions().position(latLng);
+        String addressFromLatLng = getAddressFromLatLng(latLng);
+        reviewMarker.title("Fill Review");
 
-        options.icon( BitmapDescriptorFactory.defaultMarker() );
-        mMap.addMarker( options );
-        this.setContentView(R.layout.userform);
+        reviewMarker.icon(BitmapDescriptorFactory.defaultMarker());
+        mMap.addMarker(reviewMarker);
     }
+
+    @Override
+    public void onClick(View view) {
+        if (view.equals(findViewById(R.id.submit))) {
+            // upload data to server
+            finish();
+            setContentView(R.layout.activity_maps);
+            // add toast
+        } else if (view.equals(findViewById(R.id.cancel))) {
+            setContentView(R.layout.activity_maps);
+        }
+    }
+
+    @Override
+    public boolean onMarkerClick(Marker marker) {
+        if (marker.getTitle().equals(reviewMarker.getTitle())) {
+            this.setContentView(R.layout.userform);
+            submitReviewButton = (Button) findViewById(R.id.submit);
+            cancelReviewButton = (Button) findViewById(R.id.cancel);
+            submitReviewButton.setOnClickListener(this);
+            cancelReviewButton.setOnClickListener(this);
+            marker.remove();
+            return true;
+        }
+        return false;
+    }
+
+
     private LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
