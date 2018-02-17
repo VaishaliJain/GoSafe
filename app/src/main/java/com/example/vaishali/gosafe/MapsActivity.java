@@ -35,7 +35,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+import static android.app.PendingIntent.getActivity;
+
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener {
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
@@ -84,6 +86,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    private String getAddressFromLatLng( LatLng latLng ) {
+        Geocoder geocoder = new Geocoder( this );
+
+        String address = "";
+        try {
+            address = geocoder
+                    .getFromLocation( latLng.latitude, latLng.longitude, 1 )
+                    .get( 0 ).getAddressLine( 0 );
+        } catch (IOException e ) {
+        }
+
+        return address;
+    }
+
+    @Override
+    public void onMapClick(LatLng latLng) {
+
+        MarkerOptions options = new MarkerOptions().position( latLng );
+        options.title( getAddressFromLatLng( latLng ) );
+
+        options.icon( BitmapDescriptorFactory.defaultMarker() );
+        mMap.addMarker( options );
+    }
     private LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
