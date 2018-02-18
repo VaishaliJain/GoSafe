@@ -1,8 +1,8 @@
 package com.example.vaishali.gosafe;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -16,9 +16,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.view.View;
-import android.widget.Button;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -37,17 +34,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
-import static android.app.PendingIntent.getActivity;
-
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener, View.OnClickListener,
+public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
         GoogleMap.OnMarkerClickListener {
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
-    private Button submitReviewButton;
-    private Button cancelReviewButton;
+    //    private Button submitReviewButton;
+//    private Button cancelReviewButton;
     private MarkerOptions reviewMarker;
     public static final int LOCATION_UPDATE_MIN_DISTANCE = 10;
     public static final int LOCATION_UPDATE_MIN_TIME = 5000;
@@ -96,20 +90,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.setOnMarkerClickListener(this);
     }
 
-    private String getAddressFromLatLng(LatLng latLng) {
-        Geocoder geocoder = new Geocoder(this);
-
-        String address = "";
-        try {
-            address = geocoder
-                    .getFromLocation(latLng.latitude, latLng.longitude, 1)
-                    .get(0).getAddressLine(0);
-        } catch (IOException e) {
-        }
-
-        return address;
-    }
-
     @Override
     public void onMapClick(LatLng latLng) {
 
@@ -122,29 +102,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onClick(View view) {
-        if (view.equals(findViewById(R.id.submit))) {
-            // upload data to server
-            finish();
-            setContentView(R.layout.activity_maps);
-            // add toast
-        } else if (view.equals(findViewById(R.id.cancel))) {
-            setContentView(R.layout.activity_maps);
-        }
-    }
-
-    @Override
     public boolean onMarkerClick(Marker marker) {
         if (marker.getTitle().equals(reviewMarker.getTitle())) {
-            this.setContentView(R.layout.userform);
-            submitReviewButton = (Button) findViewById(R.id.submit);
-            cancelReviewButton = (Button) findViewById(R.id.cancel);
-            submitReviewButton.setOnClickListener(this);
-            cancelReviewButton.setOnClickListener(this);
+            Intent intent = new Intent(MapsActivity.this, UserFormActivity.class);
+            startActivity(intent);
             marker.remove();
             return true;
         }
         return false;
+    }
+
+    private String getAddressFromLatLng(LatLng latLng) {
+        Geocoder geocoder = new Geocoder(this);
+
+        String address = "";
+        try {
+            address = geocoder
+                    .getFromLocation(latLng.latitude, latLng.longitude, 1)
+                    .get(0).getAddressLine(0);
+        } catch (IOException e) {
+        }
+
+        return address;
     }
 
 
