@@ -16,10 +16,22 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.Menu;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AutoCompleteTextView;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -27,6 +39,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -45,12 +58,16 @@ import java.util.List;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
-        GoogleMap.OnMarkerClickListener {
+        GoogleMap.OnMarkerClickListener, View.OnClickListener {
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
-    //    private Button submitReviewButton;
-//    private Button cancelReviewButton;
+    private Button searchLocationButton;
+    LatLng currentLocation;
+    private boolean isNavigate = false;
+    private Integer THRESHOLD = 2;
+    private DelayAutoCompleteTextView geo_autocomplete;
+    private ImageView geo_autocomplete_clear;
     private MarkerOptions reviewMarker;
     public static final int LOCATION_UPDATE_MIN_DISTANCE = 10;
     public static final int LOCATION_UPDATE_MIN_TIME = 5000;
@@ -72,6 +89,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(INITIAL_PERMS, INITIAL_REQUEST);
         }
+
+        geo_autocomplete_clear = (ImageView) findViewById(R.id.geo_autocomplete_clear);
+
+        geo_autocomplete = (DelayAutoCompleteTextView) findViewById(R.id.geo_autocomplete);
+        geo_autocomplete.setThreshold(THRESHOLD);
+        geo_autocomplete.setAdapter(new GeoAutoCompleteAdapter(this)); // 'this' is Activity instance
+
+        geo_autocomplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+                GeoSearchResult result = (GeoSearchResult) adapterView.getItemAtPosition(position);
+                geo_autocomplete.setText(result.getAddress());
+            }
+        });
+        geo_autocomplete.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if(s.length() > 0)
+                {
+                    geo_autocomplete_clear.setVisibility(View.VISIBLE);
+                }
+                else
+                {
+                    geo_autocomplete_clear.setVisibility(View.GONE);
+                }
+            }
+        });
+
+        geo_autocomplete_clear.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                // TODO Auto-generated method stub
+                geo_autocomplete.setText("");
+            }
+        });
+
     }
 
 
@@ -90,16 +153,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getCurrentLocationAndMarkIt();
 
         try {
+            searchLocationButton = (Button) findViewById(R.id.search_button);
+            searchLocationButton.setOnClickListener(this);
             putCustomMarkers();
-            LatLng origin = getCoordinatesFromAddress("Primax Park Apartments, Murgeshpallya");
-            LatLng dest = getCoordinatesFromAddress("Ansal Krsna 2, Hosur Rd");
-            navigation(origin, dest);
         } catch (IOException e) {
             e.printStackTrace();
         }
 
         mMap.setOnMapClickListener(this);
         mMap.setOnMarkerClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+        if (view.equals(findViewById(R.id.search_button))) {
+            LatLng origin = currentLocation;
+            LatLng dest = null;//findViewById(R.id.searchLocation));
+            try {
+                TextView address = findViewById(R.id.geo_autocomplete);
+                dest = getCoordinatesFromAddress(address.getText().toString());
+                isNavigate = true;
+                drawMarkerAtCurrentLocation(dest);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            navigation( origin, dest );
+        }
     }
 
     @Override
@@ -124,7 +203,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return false;
     }
 
-    private String getAddressFromLatLng(LatLng latLng) {
+       private String getAddressFromLatLng(LatLng latLng) {
         Geocoder geocoder = new Geocoder(this);
 
         String address = "";
@@ -143,7 +222,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onLocationChanged(Location location) {
             if (location != null) {
-                drawMarkerAtCurrentLocation(location);
+                currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+                drawMarkerAtCurrentLocation(currentLocation);
                 mLocationManager.removeUpdates(mLocationListener);
             }
         }
@@ -164,12 +244,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    private void drawMarkerAtCurrentLocation(Location location) {
-        LatLng gps = new LatLng(location.getLatitude(), location.getLongitude());
+    private void drawMarkerAtCurrentLocation(LatLng location) {
         mMap.addMarker(new MarkerOptions()
-                .position(gps)
+                .position(location)
                 .title("Current Position"));
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(gps, 12));
+        if(isNavigate == false)
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
+        else
+        {
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            builder.include(currentLocation);
+            builder.include(location);
+            LatLngBounds bounds = builder.build();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5) );
+        }
     }
 
     private void getCurrentLocationAndMarkIt() {
@@ -201,7 +289,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
         if (location != null) {
-            drawMarkerAtCurrentLocation(location);
+            currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
+            drawMarkerAtCurrentLocation(currentLocation);
         }
     }
 
@@ -257,9 +346,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void navigation(LatLng origin, LatLng dest)
     {
-        System.out.println("Entered navigation");
         String url = getDirectionsUrl(origin, dest);
-        System.out.println(url);
         DownloadTask downloadTask = new DownloadTask();
         // Start downloading json data from Google Directions API
         downloadTask.execute(url);
@@ -403,8 +490,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // Adding all the points in the route to LineOptions
                 lineOptions.addAll(points);
-                lineOptions.width(2);
-                lineOptions.color(Color.RED);
+                lineOptions.width(10);
+                lineOptions.color(Color.parseColor("#4a80f5"));
             }
 
             // Drawing polyline in the Google Map for the i-th route
@@ -412,12 +499,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        getMenuInflater().inflate(R.menu.main, menu);
-//        return true;
-//    }
+    private void getDestination()
+    {
+
+    }
 }
+
 
 
