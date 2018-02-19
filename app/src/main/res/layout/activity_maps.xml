@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -33,6 +35,16 @@
             android:inputType="textCapSentences"
             android:padding="10dp" />
 
+        <ImageView
+            android:id="@+id/geo_autocomplete_clear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_action_remove"
+            android:layout_gravity="center_vertical|end"
+            android:visibility="gone"
+            android:layout_marginEnd="12dp"
+            android:layout_marginRight="12dp"
+            />
 
         <Button
             android:id="@+id/search_button"
@@ -45,22 +57,46 @@
 
     </LinearLayout>
 
-    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:id="@+id/map"
-        android:name="com.google.android.gms.maps.SupportMapFragment"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        tools:context="com.example.vaishali.gosafe.MapsActivity" />
+        android:layout_height="match_parent">
 
-<ImageView
-    android:id="@+id/geo_autocomplete_clear"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:src="@drawable/ic_action_remove"
-    android:layout_gravity="center_vertical|end"
-    android:visibility="gone"
-    android:layout_marginEnd="12dp"
-    android:layout_marginRight="12dp"
-    />
+        <fragment
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            tools:context="com.example.vaishali.gosafe.MapsActivity" />
+
+        <Button
+            android:id="@+id/exitNavigation"
+            style="@style/Widget.AppCompat.Button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginLeft="194dp"
+            android:layout_marginStart="194dp"
+            android:layout_weight="1"
+            android:text="Exit Navigation"
+            android:visibility="gone" />
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/customeMarkers"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_marginBottom="13dp"
+            android:layout_marginLeft="19dp"
+            android:layout_marginStart="19dp"
+            android:layout_toEndOf="@+id/exitNavigation"
+            android:layout_toRightOf="@+id/exitNavigation"
+            android:clickable="true"
+            app:fabSize="mini"
+            app:srcCompat="@drawable/ic_action_remove" />
+    </RelativeLayout>
+
 </LinearLayout>

@@ -18,6 +18,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
@@ -42,6 +43,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONObject;
@@ -50,11 +52,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
@@ -63,8 +69,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private Button searchLocationButton;
+    private Button exitNavigation;
+    private Marker destinationMarker;
+    private Map< String, List<Marker> > newspaperMarkers = new HashMap<>();
+    private boolean[] showNewspaperMarkers = {false,false,false,false,false};
     LatLng currentLocation;
     private boolean isNavigate = false;
+    private Polyline navigationRoute;
     private Integer THRESHOLD = 2;
     private DelayAutoCompleteTextView geo_autocomplete;
     private ImageView geo_autocomplete_clear;
@@ -155,6 +166,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         try {
             searchLocationButton = (Button) findViewById(R.id.search_button);
             searchLocationButton.setOnClickListener(this);
+            exitNavigation = (Button) findViewById(R.id.exitNavigation);
+            exitNavigation.setOnClickListener(this);
             putCustomMarkers();
         } catch (IOException e) {
             e.printStackTrace();
@@ -178,6 +191,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 e.printStackTrace();
             }
             navigation( origin, dest );
+        }
+        else if(view.equals(findViewById(R.id.exitNavigation)))
+        {
+            isNavigate = false;
+            navigationRoute.remove();
+            exitNavigation.setVisibility(View.GONE);
+            destinationMarker.remove();
+            geo_autocomplete.setText("");
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         }
     }
 
@@ -245,13 +267,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     private void drawMarkerAtCurrentLocation(LatLng location) {
-        mMap.addMarker(new MarkerOptions()
-                .position(location)
-                .title("Current Position"));
-        if(isNavigate == false)
+        if(isNavigate == false) {
+            mMap.addMarker(new MarkerOptions()
+                    .position(location)
+                    .title("Current Position")
+                    .draggable(true));
+
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
+        }
         else
         {
+            destinationMarker = mMap.addMarker(new MarkerOptions()
+                    .position(location)
+                    .title("Current Position")
+                    .draggable(true));
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             builder.include(currentLocation);
             builder.include(location);
@@ -296,13 +325,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void putCustomMarkers() throws IOException {
         Map<String, List<String>> issuesAndAddresses = getIssuesAndAddresses();
+        List<Marker> accidentMarkers = new ArrayList<>();
+        List<Marker> harrassmentMarkers = new ArrayList<>();
+        List<Marker> lightMarkers = new ArrayList<>();
+        List<Marker> policeMarkers = new ArrayList<>();
+        List<Marker> theftMarkers = new ArrayList<>();
         for (String issue : issuesAndAddresses.keySet()) {
             for (String address : issuesAndAddresses.get(issue)) {
-
-                mMap.addMarker(new MarkerOptions().position(getCoordinatesFromAddress(address)).title(issue + " markers")
+                LatLng coordinates = getCoordinatesFromAddress(address);
+                Marker marker = mMap.addMarker( new MarkerOptions().position(coordinates).title(issue + " markers").visible(true)
                         .icon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons(issue, 100, 100))));
+                switch (issue)
+                {
+                    case "accident":
+                        accidentMarkers.add(marker);
+                        break;
+                    case "harrassment":
+                        harrassmentMarkers.add(marker);
+                        break;
+                    case "light":
+                        lightMarkers.add(marker);
+                        break;
+                    case "police":
+                        policeMarkers.add(marker);
+                        break;
+                    case "theft":
+                        theftMarkers.add(marker);
+                        break;
+                    default:
+                        System.out.println("Invalid issue found");
+                }
             }
         }
+        newspaperMarkers.put("accident", accidentMarkers);
+        newspaperMarkers.put("harrassment", harrassmentMarkers);
+        newspaperMarkers.put("light",lightMarkers);
+        newspaperMarkers.put("police",policeMarkers);
+        newspaperMarkers.put("theft",theftMarkers);
     }
 
     private Map<String, List<String>> getIssuesAndAddresses() throws IOException {
@@ -310,7 +369,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Map<Integer, String> resourceIdToIssue = new HashMap<>();
         resourceIdToIssue.put(R.raw.accident, "accident");
         resourceIdToIssue.put(R.raw.police, "police");
-        resourceIdToIssue.put(R.raw.harrasment, "harrasment");
+        resourceIdToIssue.put(R.raw.harrassment, "harrassment");
         resourceIdToIssue.put(R.raw.theft, "theft");
         resourceIdToIssue.put(R.raw.light, "light");
         Resources r = getResources();
@@ -350,6 +409,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         DownloadTask downloadTask = new DownloadTask();
         // Start downloading json data from Google Directions API
         downloadTask.execute(url);
+        exitNavigation.setVisibility(View.VISIBLE);
     }
 
     private String getDirectionsUrl(LatLng origin,LatLng dest){
@@ -495,13 +555,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            mMap.addPolyline(lineOptions);
+            navigationRoute = mMap.addPolyline(lineOptions);
         }
     }
-
-    private void getDestination()
+    private void toggleNewsMarkers(View view)
     {
-
+        switch (view.getId()) {
+            case R.id.accident: {
+                if (showNewspaperMarkers[0])
+                    for(Marker marker : newspaperMarkers.get("accident"))
+                        marker.setVisible(true);
+                else
+                    for(Marker marker : newspaperMarkers.get("accident"))
+                        marker.setVisible(false);
+                break;
+            }
+            case R.id.harrassment: {
+                if (showNewspaperMarkers[1])
+                    for(Marker marker : newspaperMarkers.get("harrassment"))
+                        marker.setVisible(true);
+                else
+                    for(Marker marker : newspaperMarkers.get("harrassment"))
+                        marker.setVisible(false);
+                break;
+            }
+            case R.id.light: {
+                if (showNewspaperMarkers[2])
+                    for(Marker marker : newspaperMarkers.get("light"))
+                        marker.setVisible(true);
+                else
+                    for(Marker marker : newspaperMarkers.get("light"))
+                        marker.setVisible(false);
+                break;
+            }
+            case R.id.police: {
+                if (showNewspaperMarkers[3])
+                    for(Marker marker : newspaperMarkers.get("police"))
+                        marker.setVisible(true);
+                else
+                    for(Marker marker : newspaperMarkers.get("police"))
+                        marker.setVisible(false);
+                break;
+            }
+            case R.id.theft: {
+                if (showNewspaperMarkers[4])
+                    for(Marker marker : newspaperMarkers.get("theft"))
+                        marker.setVisible(true);
+                else
+                    for(Marker marker : newspaperMarkers.get("theft"))
+                        marker.setVisible(false);
+                break;
+            }
+            default:
+                System.out.println("Incorrect id calls toggle markers");
+        }
     }
 }
 
