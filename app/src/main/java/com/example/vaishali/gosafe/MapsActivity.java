@@ -16,22 +16,15 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.Menu;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -52,15 +45,11 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
@@ -70,9 +59,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager mLocationManager;
     private Button searchLocationButton;
     private Button exitNavigation;
+    private Button harrassment_toggle;
     private Marker destinationMarker;
-    private Map< String, List<Marker> > newspaperMarkers = new HashMap<>();
-    private boolean[] showNewspaperMarkers = {false,false,false,false,false};
+    private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
+    private boolean[] showNewspaperMarkers = {true, true, true, true, true};
     LatLng currentLocation;
     private boolean isNavigate = false;
     private Polyline navigationRoute;
@@ -127,18 +117,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             @Override
             public void afterTextChanged(Editable s) {
-                if(s.length() > 0)
-                {
+                if (s.length() > 0) {
                     geo_autocomplete_clear.setVisibility(View.VISIBLE);
-                }
-                else
-                {
+                } else {
                     geo_autocomplete_clear.setVisibility(View.GONE);
                 }
             }
         });
 
-        geo_autocomplete_clear.setOnClickListener(new View.OnClickListener(){
+        geo_autocomplete_clear.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 // TODO Auto-generated method stub
@@ -168,6 +155,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             searchLocationButton.setOnClickListener(this);
             exitNavigation = (Button) findViewById(R.id.exitNavigation);
             exitNavigation.setOnClickListener(this);
+
+            harrassment_toggle = (Button) findViewById(R.id.harrassment_toggle);
+            harrassment_toggle.setOnClickListener(this);
+
+            Button accident_toggle = (Button) findViewById(R.id.accident_toggle);
+            accident_toggle.setOnClickListener(this);
+
+            Button theft_toggle = (Button) findViewById(R.id.theft_toggle);
+            theft_toggle.setOnClickListener(this);
+
+            Button police_toggle = (Button) findViewById(R.id.police_toggle);
+            police_toggle.setOnClickListener(this);
+
+            Button light_toggle = (Button) findViewById(R.id.light_toggle);
+            light_toggle.setOnClickListener(this);
+
             putCustomMarkers();
         } catch (IOException e) {
             e.printStackTrace();
@@ -190,16 +193,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            navigation( origin, dest );
-        }
-        else if(view.equals(findViewById(R.id.exitNavigation)))
-        {
+            navigation(origin, dest);
+        } else if (view.equals(findViewById(R.id.exitNavigation))) {
             isNavigate = false;
             navigationRoute.remove();
             exitNavigation.setVisibility(View.GONE);
             destinationMarker.remove();
             geo_autocomplete.setText("");
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+        } else if (view.equals(findViewById(R.id.accident_toggle))) {
+            showNewspaperMarkers[0] = !showNewspaperMarkers[0];
+            toggleNewsMarkers(view);
+        } else if (view.equals(findViewById(R.id.harrassment_toggle))) {
+            showNewspaperMarkers[1] = !showNewspaperMarkers[1];
+            toggleNewsMarkers(view);
+        } else if (view.equals(findViewById(R.id.light_toggle))) {
+            showNewspaperMarkers[2] = !showNewspaperMarkers[2];
+            toggleNewsMarkers(view);
+        } else if (view.equals(findViewById(R.id.police_toggle))) {
+            showNewspaperMarkers[3] = !showNewspaperMarkers[3];
+            toggleNewsMarkers(view);
+        } else if (view.equals(findViewById(R.id.theft_toggle))) {
+            showNewspaperMarkers[4] = !showNewspaperMarkers[4];
+            toggleNewsMarkers(view);
         }
     }
 
@@ -225,7 +241,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return false;
     }
 
-       private String getAddressFromLatLng(LatLng latLng) {
+    private String getAddressFromLatLng(LatLng latLng) {
         Geocoder geocoder = new Geocoder(this);
 
         String address = "";
@@ -267,16 +283,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     private void drawMarkerAtCurrentLocation(LatLng location) {
-        if(isNavigate == false) {
+        if (isNavigate == false) {
             mMap.addMarker(new MarkerOptions()
                     .position(location)
                     .title("Current Position")
                     .draggable(true));
 
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
-        }
-        else
-        {
+        } else {
             destinationMarker = mMap.addMarker(new MarkerOptions()
                     .position(location)
                     .title("Current Position")
@@ -285,7 +299,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             builder.include(currentLocation);
             builder.include(location);
             LatLngBounds bounds = builder.build();
-            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5) );
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5));
         }
     }
 
@@ -333,10 +347,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (String issue : issuesAndAddresses.keySet()) {
             for (String address : issuesAndAddresses.get(issue)) {
                 LatLng coordinates = getCoordinatesFromAddress(address);
-                Marker marker = mMap.addMarker( new MarkerOptions().position(coordinates).title(issue + " markers").visible(true)
+                Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).title(issue + " markers").visible(true)
                         .icon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons(issue, 100, 100))));
-                switch (issue)
-                {
+                switch (issue) {
                     case "accident":
                         accidentMarkers.add(marker);
                         break;
@@ -359,9 +372,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         newspaperMarkers.put("accident", accidentMarkers);
         newspaperMarkers.put("harrassment", harrassmentMarkers);
-        newspaperMarkers.put("light",lightMarkers);
-        newspaperMarkers.put("police",policeMarkers);
-        newspaperMarkers.put("theft",theftMarkers);
+        newspaperMarkers.put("light", lightMarkers);
+        newspaperMarkers.put("police", policeMarkers);
+        newspaperMarkers.put("theft", theftMarkers);
     }
 
     private Map<String, List<String>> getIssuesAndAddresses() throws IOException {
@@ -403,8 +416,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return new LatLng(0, 0);  // set it to some default value accordingly.
     }
 
-    private void navigation(LatLng origin, LatLng dest)
-    {
+    private void navigation(LatLng origin, LatLng dest) {
         String url = getDirectionsUrl(origin, dest);
         DownloadTask downloadTask = new DownloadTask();
         // Start downloading json data from Google Directions API
@@ -412,29 +424,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         exitNavigation.setVisibility(View.VISIBLE);
     }
 
-    private String getDirectionsUrl(LatLng origin,LatLng dest){
+    private String getDirectionsUrl(LatLng origin, LatLng dest) {
 
         // Origin of route
-        String str_origin = "origin="+origin.latitude+","+origin.longitude;
+        String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
         // Destination of route
-        String str_dest = "destination="+dest.latitude+","+dest.longitude;
+        String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
         // Sensor enabled
         String sensor = "sensor=false";
         // Building the parameters to the web service
-        String parameters = str_origin+"&"+str_dest+"&"+sensor;
+        String parameters = str_origin + "&" + str_dest + "&" + sensor;
         // Output format
         String output = "json";
         // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/"+output+"?"+parameters;
+        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
         return url;
     }
 
-    /** A method to download json data from url */
-    private String downloadUrl(String strUrl) throws IOException{
+    /**
+     * A method to download json data from url
+     */
+    private String downloadUrl(String strUrl) throws IOException {
         String data = "";
         InputStream iStream = null;
         HttpURLConnection urlConnection = null;
-        try{
+        try {
             URL url = new URL(strUrl);
 
             // Creating an http connection to communicate with url
@@ -451,7 +465,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             StringBuffer sb = new StringBuffer();
 
             String line = "";
-            while( ( line = br.readLine()) != null){
+            while ((line = br.readLine()) != null) {
                 sb.append(line);
             }
 
@@ -459,9 +473,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             br.close();
 
-        }catch(Exception e){
+        } catch (Exception e) {
             Log.d("While downloading url", e.toString());
-        }finally{
+        } finally {
             iStream.close();
             urlConnection.disconnect();
         }
@@ -469,7 +483,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     // Fetches data from url passed
-    private class DownloadTask extends AsyncTask<String, Void, String>{
+    private class DownloadTask extends AsyncTask<String, Void, String> {
 
         // Downloading data in non-ui thread
         @Override
@@ -478,11 +492,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // For storing data from web service
             String data = "";
 
-            try{
+            try {
                 // Fetching the data from web service
                 data = downloadUrl(url[0]);
-            }catch(Exception e){
-                Log.d("Background Task",e.toString());
+            } catch (Exception e) {
+                Log.d("Background Task", e.toString());
             }
             return data;
         }
@@ -500,8 +514,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    /** A class to parse the Google Places in JSON format */
-    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String,String>>> > {
+    /**
+     * A class to parse the Google Places in JSON format
+     */
+    private class ParserTask extends AsyncTask<String, Integer, List<List<HashMap<String, String>>>> {
 
         // Parsing the data in non-ui thread
         @Override
@@ -510,13 +526,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             JSONObject jObject;
             List<List<HashMap<String, String>>> routes = null;
 
-            try{
+            try {
                 jObject = new JSONObject(jsonData[0]);
                 DirectionsJSONParser parser = new DirectionsJSONParser();
 
                 // Starts parsing data
                 routes = parser.parse(jObject);
-            }catch(Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return routes;
@@ -530,7 +546,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             MarkerOptions markerOptions = new MarkerOptions();
 
             // Traversing through all the routes
-            for(int i=0;i<result.size();i++){
+            for (int i = 0; i < result.size(); i++) {
                 points = new ArrayList<LatLng>();
                 lineOptions = new PolylineOptions();
 
@@ -538,8 +554,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 List<HashMap<String, String>> path = result.get(i);
 
                 // Fetching all the points in i-th route
-                for(int j=0;j<path.size();j++){
-                    HashMap<String,String> point = path.get(j);
+                for (int j = 0; j < path.size(); j++) {
+                    HashMap<String, String> point = path.get(j);
 
                     double lat = Double.parseDouble(point.get("lat"));
                     double lng = Double.parseDouble(point.get("lng"));
@@ -558,51 +574,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             navigationRoute = mMap.addPolyline(lineOptions);
         }
     }
-    private void toggleNewsMarkers(View view)
-    {
+
+    private void toggleNewsMarkers(View view) {
         switch (view.getId()) {
-            case R.id.accident: {
+            case R.id.accident_toggle: {
                 if (showNewspaperMarkers[0])
-                    for(Marker marker : newspaperMarkers.get("accident"))
+                    for (Marker marker : newspaperMarkers.get("accident"))
                         marker.setVisible(true);
                 else
-                    for(Marker marker : newspaperMarkers.get("accident"))
+                    for (Marker marker : newspaperMarkers.get("accident"))
                         marker.setVisible(false);
                 break;
             }
-            case R.id.harrassment: {
+            case R.id.harrassment_toggle: {
                 if (showNewspaperMarkers[1])
-                    for(Marker marker : newspaperMarkers.get("harrassment"))
+                    for (Marker marker : newspaperMarkers.get("harrassment"))
                         marker.setVisible(true);
                 else
-                    for(Marker marker : newspaperMarkers.get("harrassment"))
+                    for (Marker marker : newspaperMarkers.get("harrassment"))
                         marker.setVisible(false);
                 break;
             }
-            case R.id.light: {
+            case R.id.light_toggle: {
                 if (showNewspaperMarkers[2])
-                    for(Marker marker : newspaperMarkers.get("light"))
+                    for (Marker marker : newspaperMarkers.get("light"))
                         marker.setVisible(true);
                 else
-                    for(Marker marker : newspaperMarkers.get("light"))
+                    for (Marker marker : newspaperMarkers.get("light"))
                         marker.setVisible(false);
                 break;
             }
-            case R.id.police: {
+            case R.id.police_toggle: {
                 if (showNewspaperMarkers[3])
-                    for(Marker marker : newspaperMarkers.get("police"))
+                    for (Marker marker : newspaperMarkers.get("police"))
                         marker.setVisible(true);
                 else
-                    for(Marker marker : newspaperMarkers.get("police"))
+                    for (Marker marker : newspaperMarkers.get("police"))
                         marker.setVisible(false);
                 break;
             }
-            case R.id.theft: {
+            case R.id.theft_toggle: {
                 if (showNewspaperMarkers[4])
-                    for(Marker marker : newspaperMarkers.get("theft"))
+                    for (Marker marker : newspaperMarkers.get("theft"))
                         marker.setVisible(true);
                 else
-                    for(Marker marker : newspaperMarkers.get("theft"))
+                    for (Marker marker : newspaperMarkers.get("theft"))
                         marker.setVisible(false);
                 break;
             }

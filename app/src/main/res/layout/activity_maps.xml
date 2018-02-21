@@ -14,11 +14,11 @@
         android:orientation="horizontal">
 
         <!--<EditText-->
-            <!--android:id="@+id/searchLocation"-->
-            <!--android:layout_width="wrap_content"-->
-            <!--android:layout_height="wrap_content"-->
-            <!--android:layout_weight="4"-->
-            <!--android:hint="Search Location Here" />-->
+        <!--android:id="@+id/searchLocation"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_weight="4"-->
+        <!--android:hint="Search Location Here" />-->
 
         <com.example.vaishali.gosafe.DelayAutoCompleteTextView
             android:id="@+id/geo_autocomplete"
@@ -39,12 +39,11 @@
             android:id="@+id/geo_autocomplete_clear"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/ic_action_remove"
             android:layout_gravity="center_vertical|end"
-            android:visibility="gone"
             android:layout_marginEnd="12dp"
             android:layout_marginRight="12dp"
-            />
+            android:src="@drawable/ic_action_remove"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/search_button"
@@ -97,6 +96,56 @@
             android:clickable="true"
             app:fabSize="mini"
             app:srcCompat="@drawable/ic_action_remove" />
+
+        <Button
+            android:id="@+id/accident_toggle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/round_button"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="A"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/harrassment_toggle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toRightOf="@+id/accident_toggle"
+            android:background="@drawable/round_button"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="H"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/light_toggle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toRightOf="@+id/harrassment_toggle"
+            android:background="@drawable/round_button"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="L"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/police_toggle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toRightOf="@+id/light_toggle"
+            android:background="@drawable/round_button"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="P"
+            android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/theft_toggle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toRightOf="@+id/police_toggle"
+            android:background="@drawable/round_button"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="T"
+            android:textColor="#fff" />
+
     </RelativeLayout>
 
 </LinearLayout>
