@@ -60,6 +60,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Button searchLocationButton;
     private Button exitNavigation;
     private Button harrassment_toggle;
+    private Button choice_toggle;
+    private Button police_toggle;
+    private Button theft_toggle;
+    private Button accident_toggle;
+    private Button light_toggle;
+    private boolean choice_toggle_value = false;
     private Marker destinationMarker;
     private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
     private boolean[] showNewspaperMarkers = {true, true, true, true, true};
@@ -159,17 +165,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             harrassment_toggle = (Button) findViewById(R.id.harrassment_toggle);
             harrassment_toggle.setOnClickListener(this);
 
-            Button accident_toggle = (Button) findViewById(R.id.accident_toggle);
+            accident_toggle = (Button) findViewById(R.id.accident_toggle);
             accident_toggle.setOnClickListener(this);
 
-            Button theft_toggle = (Button) findViewById(R.id.theft_toggle);
+            theft_toggle = (Button) findViewById(R.id.theft_toggle);
             theft_toggle.setOnClickListener(this);
 
-            Button police_toggle = (Button) findViewById(R.id.police_toggle);
+            police_toggle = (Button) findViewById(R.id.police_toggle);
             police_toggle.setOnClickListener(this);
 
-            Button light_toggle = (Button) findViewById(R.id.light_toggle);
+            light_toggle = (Button) findViewById(R.id.light_toggle);
             light_toggle.setOnClickListener(this);
+
+            choice_toggle = (Button) findViewById(R.id.choice_toggle);
+            choice_toggle.setOnClickListener(this);
 
             putCustomMarkers();
         } catch (IOException e) {
@@ -216,6 +225,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else if (view.equals(findViewById(R.id.theft_toggle))) {
             showNewspaperMarkers[4] = !showNewspaperMarkers[4];
             toggleNewsMarkers(view);
+        } else if (view.equals(findViewById(R.id.choice_toggle))) {
+            choice_toggle_value = !choice_toggle_value;
+            if (choice_toggle_value) {
+                accident_toggle.setVisibility(View.VISIBLE);
+                harrassment_toggle.setVisibility(View.VISIBLE);
+                light_toggle.setVisibility(View.VISIBLE);
+                theft_toggle.setVisibility(View.VISIBLE);
+                police_toggle.setVisibility(View.VISIBLE);
+            } else {
+                accident_toggle.setVisibility(View.GONE);
+                harrassment_toggle.setVisibility(View.GONE);
+                light_toggle.setVisibility(View.GONE);
+                theft_toggle.setVisibility(View.GONE);
+                police_toggle.setVisibility(View.GONE);
+            }
         }
     }
 

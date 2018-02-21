@@ -98,13 +98,24 @@
             app:srcCompat="@drawable/ic_action_remove" />
 
         <Button
-            android:id="@+id/accident_toggle"
+            android:id="@+id/choice_toggle"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/round_button"
             android:gravity="center_vertical|center_horizontal"
-            android:text="A"
+            android:text="Mark"
             android:textColor="#fff" />
+
+        <Button
+            android:id="@+id/accident_toggle"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_toRightOf="@+id/choice_toggle"
+            android:background="@drawable/round_button"
+            android:gravity="center_vertical|center_horizontal"
+            android:text="A"
+            android:textColor="#fff"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/harrassment_toggle"
@@ -114,7 +125,8 @@
             android:background="@drawable/round_button"
             android:gravity="center_vertical|center_horizontal"
             android:text="H"
-            android:textColor="#fff" />
+            android:textColor="#fff"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/light_toggle"
@@ -124,7 +136,8 @@
             android:background="@drawable/round_button"
             android:gravity="center_vertical|center_horizontal"
             android:text="L"
-            android:textColor="#fff" />
+            android:textColor="#fff"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/police_toggle"
@@ -134,7 +147,8 @@
             android:background="@drawable/round_button"
             android:gravity="center_vertical|center_horizontal"
             android:text="P"
-            android:textColor="#fff" />
+            android:textColor="#fff"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/theft_toggle"
@@ -144,7 +158,8 @@
             android:background="@drawable/round_button"
             android:gravity="center_vertical|center_horizontal"
             android:text="T"
-            android:textColor="#fff" />
+            android:textColor="#fff"
+            android:visibility="gone" />
 
     </RelativeLayout>
 
