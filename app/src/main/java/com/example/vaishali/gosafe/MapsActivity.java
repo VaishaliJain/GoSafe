@@ -202,7 +202,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            navigation(origin, dest);
+            if(dest)
+                navigation(origin, dest);
         } else if (view.equals(findViewById(R.id.exitNavigation))) {
             isNavigate = false;
             navigationRoute.remove();
@@ -595,7 +596,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            navigationRoute = mMap.addPolyline(lineOptions);
+            if(lineOptions)
+                navigationRoute = mMap.addPolyline(lineOptions);
         }
     }
 
