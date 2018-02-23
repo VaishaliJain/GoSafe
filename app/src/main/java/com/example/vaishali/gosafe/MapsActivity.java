@@ -5,8 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.location.Address;
 import android.location.Geocoder;
@@ -142,25 +140,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             geo_autocomplete.setThreshold(THRESHOLD);
             geo_autocomplete.setAdapter(new GeoAutoCompleteAdapter(this)); // 'this' is Activity instance
             geo_autocomplete.setOnItemClickListener(this);
-
-            geo_autocomplete.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                }
-
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                    if (s.length() > 0) {
-                        geo_autocomplete_clear.setVisibility(View.VISIBLE);
-                    } else {
-                        geo_autocomplete_clear.setVisibility(View.GONE);
-                    }
-                }
-            });
+            geo_autocomplete.addTextChangedListener(mTextWatcher);
 
             putCustomMarkers();
         } catch (IOException e) {
@@ -270,6 +250,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return address;
     }
 
+    private TextWatcher mTextWatcher = new TextWatcher() {
+        @Override
+        public void onTextChanged(CharSequence s, int start, int before, int count) {
+        }
+
+        @Override
+        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+        }
+
+        @Override
+        public void afterTextChanged(Editable s) {
+            if (s.length() > 0) {
+                geo_autocomplete_clear.setVisibility(View.VISIBLE);
+            } else {
+                geo_autocomplete_clear.setVisibility(View.GONE);
+            }
+        }
+    };
+
 
     private LocationListener mLocationListener = new LocationListener() {
         @Override
@@ -284,17 +283,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         @Override
         public void onStatusChanged(String s, int i, Bundle bundle) {
-
         }
 
         @Override
         public void onProviderEnabled(String s) {
-
         }
 
         @Override
         public void onProviderDisabled(String s) {
-
         }
     };
 
@@ -429,11 +425,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return result;
     }
 
-    public Bitmap resizeMapIcons(String iconName, int width, int height) {
-        Bitmap imageBitmap = BitmapFactory.decodeResource(getResources(), getResources().getIdentifier(iconName, "drawable", getPackageName()));
-        return Bitmap.createScaledBitmap(imageBitmap, width, height, false);
-    }
-
     private LatLng getCoordinatesFromAddress(String address) throws IOException {
         Geocoder geocoder = new Geocoder(this);
         List<Address> addresses;
@@ -454,20 +445,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private String getDirectionsUrl(LatLng origin, LatLng dest) {
-
-        // Origin of route
         String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
-        // Destination of route
         String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
-        // Sensor enabled
         String sensor = "sensor=false";
-        // Building the parameters to the web service
         String parameters = str_origin + "&" + str_dest + "&" + sensor;
-        // Output format
         String output = "json";
-        // Building the url to the web service
-        String url = "https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters;
-        return url;
+        return ("https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters);
     }
 
     /**
@@ -572,7 +555,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
             ArrayList<LatLng> points = null;
             PolylineOptions lineOptions = null;
-            MarkerOptions markerOptions = new MarkerOptions();
 
             // Traversing through all the routes
             for (int i = 0; i < result.size(); i++) {
@@ -585,11 +567,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Fetching all the points in i-th route
                 for (int j = 0; j < path.size(); j++) {
                     HashMap<String, String> point = path.get(j);
-
                     double lat = Double.parseDouble(point.get("lat"));
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
-
                     points.add(position);
                 }
 
