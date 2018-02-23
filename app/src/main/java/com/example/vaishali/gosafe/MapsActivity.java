@@ -25,6 +25,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -59,8 +60,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
-    private Button searchLocationButton;
-    private Button exitNavigation;
+    private ImageView searchLocationButton;
     private FloatingActionButton harrassment_toggle;
     private FloatingActionButton choice_toggle;
     private FloatingActionButton police_toggle;
@@ -139,6 +139,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View v) {
                 // TODO Auto-generated method stub
                 geo_autocomplete.setText("");
+                isNavigate = false;
+                navigationRoute.remove();
+                destinationMarker.remove();
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
             }
         });
 
@@ -160,11 +164,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getCurrentLocationAndMarkIt();
 
         try {
-            searchLocationButton = (Button) findViewById(R.id.search_button);
+            searchLocationButton = (ImageView) findViewById(R.id.search_button);
             searchLocationButton.setOnClickListener(this);
-
-            exitNavigation = (Button) findViewById(R.id.exitNavigation);
-            exitNavigation.setOnClickListener(this);
 
             harrassment_toggle = (FloatingActionButton) findViewById(R.id.harrassment_toggle);
             harrassment_toggle.setOnClickListener(this);
@@ -212,14 +213,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 e.printStackTrace();
             }
 
-        } else if (view.equals(findViewById(R.id.exitNavigation))) {
-            isNavigate = false;
-            navigationRoute.remove();
-            exitNavigation.setVisibility(View.GONE);
-            destinationMarker.remove();
-            geo_autocomplete.setText("");
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
-        } else if (view.equals(findViewById(R.id.accident_toggle))) {
+        }
+         else if (view.equals(findViewById(R.id.accident_toggle))) {
             showNewspaperMarkers[0] = !showNewspaperMarkers[0];
             toggleNewsMarkers(view);
         } else if (view.equals(findViewById(R.id.harrassment_toggle))) {
@@ -469,7 +464,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         DownloadTask downloadTask = new DownloadTask();
         // Start downloading json data from Google Directions API
         downloadTask.execute(url);
-        exitNavigation.setVisibility(View.VISIBLE);
     }
 
     private String getDirectionsUrl(LatLng origin, LatLng dest) {

@@ -23,7 +23,7 @@
 
         <com.example.vaishali.gosafe.DelayAutoCompleteTextView
             android:id="@+id/geo_autocomplete"
-            android:layout_width="242dp"
+            android:layout_width="281dp"
             android:layout_height="49dp"
             android:layout_gravity="center_vertical"
             android:layout_marginBottom="4dp"
@@ -46,14 +46,14 @@
             android:src="@drawable/ic_action_remove"
             android:visibility="gone" />
 
-        <Button
+        <ImageView
             android:id="@+id/search_button"
-            style="@style/Widget.AppCompat.Button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="0.5"
-            android:onClick="onMapSearch"
-            android:text="Search" />
+            android:layout_gravity="center_vertical|end"
+            android:adjustViewBounds="false"
+            android:cropToPadding="false"
+            android:src="@drawable/searchicon" />
 
     </LinearLayout>
 
@@ -71,28 +71,14 @@
             map:uiZoomControls="true"
             tools:context="com.example.vaishali.gosafe.MapsActivity" />
 
-        <Button
-            android:id="@+id/exitNavigation"
-            style="@style/Widget.AppCompat.Button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginLeft="194dp"
-            android:layout_marginStart="194dp"
-            android:layout_weight="1"
-            android:text="Exit Navigation"
-            android:visibility="gone" />
-
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_alignParentEnd="true"
             android:layout_alignParentRight="true"
             android:layout_alignParentTop="true"
-            android:layout_marginEnd="184dp"
-            android:layout_marginRight="184dp">
+            android:layout_marginEnd="239dp"
+            android:layout_marginRight="239dp">
 
             <android.support.design.widget.FloatingActionButton
                 android:id="@+id/choice_toggle"
@@ -102,12 +88,10 @@
                 android:layout_marginBottom="13dp"
                 android:layout_marginLeft="21dp"
                 android:layout_marginStart="21dp"
-                android:layout_toEndOf="@+id/exitNavigation"
-                android:layout_toRightOf="@+id/exitNavigation"
                 android:clickable="true"
-                app:backgroundTint="@android:color/darker_gray"
+                app:backgroundTint="@color/colorAccent"
                 app:fabSize="normal"
-                app:srcCompat="@android:drawable/ic_menu_close_clear_cancel"
+                app:srcCompat="@drawable/addoption"
                 tools:ignore="NotSibling" />
 
             <android.support.design.widget.FloatingActionButton
