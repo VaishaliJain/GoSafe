@@ -68,6 +68,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FloatingActionButton accident_toggle;
     private FloatingActionButton light_toggle;
     private boolean choice_toggle_value = false;
+    private Marker currentLocationMarker;
     private Marker destinationMarker;
     private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
     private boolean[] showNewspaperMarkers = {false, false, false, false, false};
@@ -293,7 +294,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onLocationChanged(Location location) {
             if (location != null) {
                 currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                drawMarkerAtCurrentLocation(currentLocation);
+                currentLocationMarker.setPosition(currentLocation);
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 mLocationManager.removeUpdates(mLocationListener);
             }
         }
@@ -365,7 +367,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         if (location != null) {
             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-            drawMarkerAtCurrentLocation(currentLocation);
+            currentLocationMarker = mMap.addMarker(new MarkerOptions()
+                    .position(currentLocation)
+                    .title("Current Position")
+                    .draggable(true));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         }
     }
 
