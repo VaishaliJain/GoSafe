@@ -16,6 +16,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
@@ -31,6 +32,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
@@ -59,16 +61,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationManager mLocationManager;
     private Button searchLocationButton;
     private Button exitNavigation;
-    private Button harrassment_toggle;
-    private Button choice_toggle;
-    private Button police_toggle;
-    private Button theft_toggle;
-    private Button accident_toggle;
-    private Button light_toggle;
+    private FloatingActionButton harrassment_toggle;
+    private FloatingActionButton choice_toggle;
+    private FloatingActionButton police_toggle;
+    private FloatingActionButton theft_toggle;
+    private FloatingActionButton accident_toggle;
+    private FloatingActionButton light_toggle;
     private boolean choice_toggle_value = false;
     private Marker destinationMarker;
     private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
-    private boolean[] showNewspaperMarkers = {true, true, true, true, true};
+    private boolean[] showNewspaperMarkers = {false, false, false, false, false};
     LatLng currentLocation;
     private boolean isNavigate = false;
     private Polyline navigationRoute;
@@ -159,25 +161,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         try {
             searchLocationButton = (Button) findViewById(R.id.search_button);
             searchLocationButton.setOnClickListener(this);
+
             exitNavigation = (Button) findViewById(R.id.exitNavigation);
             exitNavigation.setOnClickListener(this);
 
-            harrassment_toggle = (Button) findViewById(R.id.harrassment_toggle);
+            harrassment_toggle = (FloatingActionButton) findViewById(R.id.harrassment_toggle);
             harrassment_toggle.setOnClickListener(this);
 
-            accident_toggle = (Button) findViewById(R.id.accident_toggle);
+            accident_toggle = (FloatingActionButton) findViewById(R.id.accident_toggle);
             accident_toggle.setOnClickListener(this);
 
-            theft_toggle = (Button) findViewById(R.id.theft_toggle);
+            theft_toggle = (FloatingActionButton) findViewById(R.id.theft_toggle);
             theft_toggle.setOnClickListener(this);
 
-            police_toggle = (Button) findViewById(R.id.police_toggle);
+            police_toggle = (FloatingActionButton) findViewById(R.id.police_toggle);
             police_toggle.setOnClickListener(this);
 
-            light_toggle = (Button) findViewById(R.id.light_toggle);
+            light_toggle = (FloatingActionButton) findViewById(R.id.light_toggle);
             light_toggle.setOnClickListener(this);
 
-            choice_toggle = (Button) findViewById(R.id.choice_toggle);
+            choice_toggle = (FloatingActionButton) findViewById(R.id.choice_toggle);
             choice_toggle.setOnClickListener(this);
 
             putCustomMarkers();
@@ -193,17 +196,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onClick(View view) {
         if (view.equals(findViewById(R.id.search_button))) {
             LatLng origin = currentLocation;
-            LatLng dest = null;//findViewById(R.id.searchLocation));
+            LatLng dest = null;
             try {
                 TextView address = findViewById(R.id.geo_autocomplete);
-                dest = getCoordinatesFromAddress(address.getText().toString());
-                isNavigate = true;
-                drawMarkerAtCurrentLocation(dest);
+                if(address.getText().toString() != "") {
+                    dest = getCoordinatesFromAddress(address.getText().toString());
+                    isNavigate = true;
+                    navigation(origin, dest);
+                    drawMarkerAtCurrentLocation(dest);
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if(dest)
-                navigation(origin, dest);
+
         } else if (view.equals(findViewById(R.id.exitNavigation))) {
             isNavigate = false;
             navigationRoute.remove();
@@ -362,6 +367,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+    public BitmapDescriptor getMarkerIcon(String color) {
+        float[] hsv = new float[3];
+        Color.colorToHSV(Color.parseColor(color), hsv);
+        return BitmapDescriptorFactory.defaultMarker(hsv[0]);
+    }
+
     private void putCustomMarkers() throws IOException {
         Map<String, List<String>> issuesAndAddresses = getIssuesAndAddresses();
         List<Marker> accidentMarkers = new ArrayList<>();
@@ -372,23 +383,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (String issue : issuesAndAddresses.keySet()) {
             for (String address : issuesAndAddresses.get(issue)) {
                 LatLng coordinates = getCoordinatesFromAddress(address);
-                Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).title(issue + " markers").visible(true)
-                        .icon(BitmapDescriptorFactory.fromBitmap(resizeMapIcons(issue, 100, 100))));
+                Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).title(issue + " markers").visible(false));
                 switch (issue) {
                     case "accident":
                         accidentMarkers.add(marker);
+                        marker.setIcon(getMarkerIcon("#ffaa66cc"));
                         break;
                     case "harrassment":
                         harrassmentMarkers.add(marker);
+                        marker.setIcon(getMarkerIcon("#ff00ddff"));
                         break;
                     case "light":
                         lightMarkers.add(marker);
+                        marker.setIcon(getMarkerIcon("#ffffbb33"));
                         break;
                     case "police":
                         policeMarkers.add(marker);
+                        marker.setIcon(getMarkerIcon("#FF4560F2"));
                         break;
                     case "theft":
                         theftMarkers.add(marker);
+                        marker.setIcon(getMarkerIcon("#ff669900"));
                         break;
                     default:
                         System.out.println("Invalid issue found");
@@ -596,7 +611,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            if(lineOptions)
+            if(lineOptions.getPoints().size() >0 )
                 navigationRoute = mMap.addPolyline(lineOptions);
         }
     }

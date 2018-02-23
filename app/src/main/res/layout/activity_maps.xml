@@ -83,83 +83,94 @@
             android:text="Exit Navigation"
             android:visibility="gone" />
 
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/customeMarkers"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_marginBottom="13dp"
-            android:layout_marginLeft="19dp"
-            android:layout_marginStart="19dp"
-            android:layout_toEndOf="@+id/exitNavigation"
-            android:layout_toRightOf="@+id/exitNavigation"
-            android:clickable="true"
-            app:fabSize="mini"
-            app:srcCompat="@drawable/ic_action_remove" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true">
 
-        <Button
-            android:id="@+id/choice_toggle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:background="@drawable/round_button"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="Mark"
-            android:textColor="#fff" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/choice_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginBottom="13dp"
+                android:layout_marginLeft="21dp"
+                android:layout_marginStart="21dp"
+                android:layout_toEndOf="@+id/exitNavigation"
+                android:layout_toRightOf="@+id/exitNavigation"
+                android:clickable="true"
+                app:backgroundTint="@android:color/darker_gray"
+                app:fabSize="normal"
+                app:srcCompat="@android:drawable/ic_menu_close_clear_cancel" />
 
-        <Button
-            android:id="@+id/accident_toggle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_toRightOf="@+id/choice_toggle"
-            android:background="@drawable/round_button"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="A"
-            android:textColor="#fff"
-            android:visibility="gone" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/accident_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/choice_toggle"
+                android:layout_alignLeft="@+id/choice_toggle"
+                android:layout_alignStart="@+id/choice_toggle"
+                android:layout_marginBottom="11dp"
+                android:clickable="true"
+                android:visibility="gone"
+                app:backgroundTint="@android:color/holo_purple"
+                app:srcCompat="@drawable/accident" />
 
-        <Button
-            android:id="@+id/harrassment_toggle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_toRightOf="@+id/accident_toggle"
-            android:background="@drawable/round_button"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="H"
-            android:textColor="#fff"
-            android:visibility="gone" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/harrassment_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/accident_toggle"
+                android:layout_alignLeft="@+id/accident_toggle"
+                android:layout_alignStart="@+id/accident_toggle"
+                android:layout_marginBottom="11dp"
+                android:clickable="true"
+                android:visibility="gone"
+                app:backgroundTint="@android:color/holo_blue_bright"
+                app:srcCompat="@drawable/harrassment" />
 
-        <Button
-            android:id="@+id/light_toggle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_toRightOf="@+id/harrassment_toggle"
-            android:background="@drawable/round_button"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="L"
-            android:textColor="#fff"
-            android:visibility="gone" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/light_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/harrassment_toggle"
+                android:layout_alignLeft="@+id/harrassment_toggle"
+                android:layout_alignStart="@+id/harrassment_toggle"
+                android:layout_marginBottom="11dp"
+                android:clickable="true"
+                android:visibility="gone"
+                app:backgroundTint="@android:color/holo_orange_light"
+                app:srcCompat="@drawable/light" />
 
-        <Button
-            android:id="@+id/police_toggle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_toRightOf="@+id/light_toggle"
-            android:background="@drawable/round_button"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="P"
-            android:textColor="#fff"
-            android:visibility="gone" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/police_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/light_toggle"
+                android:layout_alignLeft="@+id/light_toggle"
+                android:layout_alignStart="@+id/light_toggle"
+                android:layout_marginBottom="13dp"
+                android:clickable="true"
+                android:visibility="gone"
+                app:backgroundTint="@color/colorPrimary"
+                app:srcCompat="@drawable/police" />
 
-        <Button
-            android:id="@+id/theft_toggle"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_toRightOf="@+id/police_toggle"
-            android:background="@drawable/round_button"
-            android:gravity="center_vertical|center_horizontal"
-            android:text="T"
-            android:textColor="#fff"
-            android:visibility="gone" />
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/theft_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/police_toggle"
+                android:layout_alignLeft="@+id/police_toggle"
+                android:layout_alignStart="@+id/police_toggle"
+                android:layout_marginBottom="13dp"
+                android:clickable="true"
+                android:visibility="gone"
+                app:backgroundTint="@android:color/holo_green_dark"
+                app:srcCompat="@drawable/theft" />
+
+        </RelativeLayout>
 
     </RelativeLayout>
 
