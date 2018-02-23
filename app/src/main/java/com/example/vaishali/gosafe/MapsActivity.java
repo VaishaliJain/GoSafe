@@ -201,9 +201,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 TextView address = findViewById(R.id.geo_autocomplete);
                 if(address.getText().toString() != "") {
                     dest = getCoordinatesFromAddress(address.getText().toString());
-                    isNavigate = true;
-                    navigation(origin, dest);
-                    drawMarkerAtCurrentLocation(dest);
+                    if(!dest.equals(null)) {
+                        isNavigate = true;
+                        navigation(origin, dest);
+                        drawMarkerAtCurrentLocation(dest);
+                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();

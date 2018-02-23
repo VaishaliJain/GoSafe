@@ -22,7 +22,7 @@
 
         <com.example.vaishali.gosafe.DelayAutoCompleteTextView
             android:id="@+id/geo_autocomplete"
-            android:layout_width="255dp"
+            android:layout_width="242dp"
             android:layout_height="49dp"
             android:layout_gravity="center_vertical"
             android:layout_marginBottom="4dp"
