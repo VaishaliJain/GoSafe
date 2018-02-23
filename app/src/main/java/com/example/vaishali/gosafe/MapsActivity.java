@@ -75,6 +75,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private DelayAutoCompleteTextView geo_autocomplete;
     private ImageView geo_autocomplete_clear;
     private MarkerOptions reviewMarker;
+    private Marker actualReviewMarker;
     public static final int LOCATION_UPDATE_MIN_DISTANCE = 10;
     public static final int LOCATION_UPDATE_MIN_TIME = 5000;
     private static final int INITIAL_REQUEST = 1337;
@@ -112,31 +113,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getCurrentLocationAndMarkIt();
 
         try {
-            searchLocationButton = (ImageView) findViewById(R.id.search_button);
+            searchLocationButton = findViewById(R.id.search_button);
             searchLocationButton.setOnClickListener(this);
 
-            harrassment_toggle = (FloatingActionButton) findViewById(R.id.harrassment_toggle);
+            harrassment_toggle = findViewById(R.id.harrassment_toggle);
             harrassment_toggle.setOnClickListener(this);
 
-            accident_toggle = (FloatingActionButton) findViewById(R.id.accident_toggle);
+            accident_toggle = findViewById(R.id.accident_toggle);
             accident_toggle.setOnClickListener(this);
 
-            theft_toggle = (FloatingActionButton) findViewById(R.id.theft_toggle);
+            theft_toggle = findViewById(R.id.theft_toggle);
             theft_toggle.setOnClickListener(this);
 
-            police_toggle = (FloatingActionButton) findViewById(R.id.police_toggle);
+            police_toggle = findViewById(R.id.police_toggle);
             police_toggle.setOnClickListener(this);
 
-            light_toggle = (FloatingActionButton) findViewById(R.id.light_toggle);
+            light_toggle = findViewById(R.id.light_toggle);
             light_toggle.setOnClickListener(this);
 
-            choice_toggle = (FloatingActionButton) findViewById(R.id.choice_toggle);
+            choice_toggle = findViewById(R.id.choice_toggle);
             choice_toggle.setOnClickListener(this);
 
-            geo_autocomplete_clear = (ImageView) findViewById(R.id.geo_autocomplete_clear);
+            geo_autocomplete_clear = findViewById(R.id.geo_autocomplete_clear);
             geo_autocomplete_clear.setOnClickListener(this);
 
-            geo_autocomplete = (DelayAutoCompleteTextView) findViewById(R.id.geo_autocomplete);
+            geo_autocomplete = findViewById(R.id.geo_autocomplete);
             geo_autocomplete.setThreshold(THRESHOLD);
             geo_autocomplete.setAdapter(new GeoAutoCompleteAdapter(this)); // 'this' is Activity instance
             geo_autocomplete.setOnItemClickListener(this);
@@ -161,11 +162,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onClick(View view) {
         if (view.equals(findViewById(R.id.search_button))) {
             LatLng origin = currentLocation;
-            LatLng dest = null;
             try {
                 TextView address = findViewById(R.id.geo_autocomplete);
-                if (address.getText().toString() != "") {
-                    dest = getCoordinatesFromAddress(address.getText().toString());
+                if (!address.getText().toString().isEmpty()) {
+                    LatLng dest = getCoordinatesFromAddress(address.getText().toString());
                     if (!dest.equals(null)) {
                         isNavigate = true;
                         navigation(origin, dest);
@@ -216,18 +216,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapClick(LatLng latLng) {
-
+        if(actualReviewMarker!=null){
+            actualReviewMarker.remove();
+        }
         reviewMarker = new MarkerOptions().position(latLng);
-        String addressFromLatLng = getAddressFromLatLng(latLng);
-        reviewMarker.title("Fill Review");
-
+        reviewMarker.title(getAddressFromLatLng(latLng));
         reviewMarker.icon(BitmapDescriptorFactory.defaultMarker());
-        mMap.addMarker(reviewMarker);
+        actualReviewMarker = mMap.addMarker(reviewMarker);
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        if (marker.getTitle().equals(reviewMarker.getTitle())) {
+        if (marker.equals(actualReviewMarker)) {
             Intent intent = new Intent(MapsActivity.this, UserFormActivity.class);
             startActivity(intent);
             marker.remove();
@@ -246,7 +246,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .get(0).getAddressLine(0);
         } catch (IOException e) {
         }
-
         return address;
     }
 
@@ -295,7 +294,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     };
 
     private void drawMarkerAtCurrentLocation(LatLng location) {
-        if (isNavigate == false) {
+        if (!isNavigate) {
             mMap.addMarker(new MarkerOptions()
                     .position(location)
                     .title("Current Position")
@@ -323,7 +322,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if ((isGPSEnabled || isNetworkEnabled)) {
             if (isNetworkEnabled) {
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
                     //    ActivityCompat#requestPermissions
                     // here to request the missing permissions, and then overriding
                     //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
@@ -462,27 +460,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         HttpURLConnection urlConnection = null;
         try {
             URL url = new URL(strUrl);
-
-            // Creating an http connection to communicate with url
-            urlConnection = (HttpURLConnection) url.openConnection();
-
-            // Connecting to url
-            urlConnection.connect();
-
-            // Reading data from url
-            iStream = urlConnection.getInputStream();
+            urlConnection = (HttpURLConnection) url.openConnection(); // Creating an http connection to communicate with url
+            urlConnection.connect();  // Connecting to url
+            iStream = urlConnection.getInputStream();  // Reading data from url
 
             BufferedReader br = new BufferedReader(new InputStreamReader(iStream));
-
             StringBuffer sb = new StringBuffer();
-
             String line = "";
+
             while ((line = br.readLine()) != null) {
                 sb.append(line);
             }
-
             data = sb.toString();
-
             br.close();
 
         } catch (Exception e) {

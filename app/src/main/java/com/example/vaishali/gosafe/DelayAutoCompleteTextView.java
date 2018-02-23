@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.AutoCompleteTextView;
 import android.widget.ProgressBar;
 
 public class DelayAutoCompleteTextView extends android.support.v7.widget.AppCompatAutoCompleteTextView {

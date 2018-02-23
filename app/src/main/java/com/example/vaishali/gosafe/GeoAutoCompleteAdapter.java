@@ -83,6 +83,7 @@ public class GeoAutoCompleteAdapter extends BaseAdapter implements Filterable {
         };
         return filter;
     }
+
     private List<GeoSearchResult> findLocations(Context context, String query_text) {
 
         List<GeoSearchResult> geo_search_results = new ArrayList<GeoSearchResult>();
@@ -94,10 +95,9 @@ public class GeoAutoCompleteAdapter extends BaseAdapter implements Filterable {
             // Getting a maximum of 15 Address that matches the input text
             addresses = geocoder.getFromLocationName(query_text, 15);
 
-            for(int i=0;i<addresses.size();i++){
+            for (int i = 0; i < addresses.size(); i++) {
                 Address address = (Address) addresses.get(i);
-                if(address.getMaxAddressLineIndex() != -1)
-                {
+                if (address.getMaxAddressLineIndex() != -1) {
                     geo_search_results.add(new GeoSearchResult(address));
                 }
             }
