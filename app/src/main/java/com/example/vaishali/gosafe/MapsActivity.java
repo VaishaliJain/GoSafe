@@ -24,8 +24,6 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -56,7 +54,7 @@ import java.util.List;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
-        GoogleMap.OnMarkerClickListener, View.OnClickListener {
+        GoogleMap.OnMarkerClickListener, View.OnClickListener, AdapterView.OnItemClickListener {
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
@@ -99,55 +97,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(INITIAL_PERMS, INITIAL_REQUEST);
         }
-
-        geo_autocomplete_clear = (ImageView) findViewById(R.id.geo_autocomplete_clear);
-
-        geo_autocomplete = (DelayAutoCompleteTextView) findViewById(R.id.geo_autocomplete);
-        geo_autocomplete.setThreshold(THRESHOLD);
-        geo_autocomplete.setAdapter(new GeoAutoCompleteAdapter(this)); // 'this' is Activity instance
-
-        geo_autocomplete.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-                GeoSearchResult result = (GeoSearchResult) adapterView.getItemAtPosition(position);
-                geo_autocomplete.setText(result.getAddress());
-            }
-        });
-        geo_autocomplete.addTextChangedListener(new TextWatcher() {
-
-            @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-
-            }
-
-            @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable s) {
-                if (s.length() > 0) {
-                    geo_autocomplete_clear.setVisibility(View.VISIBLE);
-                } else {
-                    geo_autocomplete_clear.setVisibility(View.GONE);
-                }
-            }
-        });
-
-        geo_autocomplete_clear.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // TODO Auto-generated method stub
-                geo_autocomplete.setText("");
-                isNavigate = false;
-                navigationRoute.remove();
-                destinationMarker.remove();
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
-            }
-        });
-
     }
-
 
     /**
      * Manipulates the map once available.
@@ -185,6 +135,33 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             choice_toggle = (FloatingActionButton) findViewById(R.id.choice_toggle);
             choice_toggle.setOnClickListener(this);
 
+            geo_autocomplete_clear = (ImageView) findViewById(R.id.geo_autocomplete_clear);
+            geo_autocomplete_clear.setOnClickListener(this);
+
+            geo_autocomplete = (DelayAutoCompleteTextView) findViewById(R.id.geo_autocomplete);
+            geo_autocomplete.setThreshold(THRESHOLD);
+            geo_autocomplete.setAdapter(new GeoAutoCompleteAdapter(this)); // 'this' is Activity instance
+            geo_autocomplete.setOnItemClickListener(this);
+
+            geo_autocomplete.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (s.length() > 0) {
+                        geo_autocomplete_clear.setVisibility(View.VISIBLE);
+                    } else {
+                        geo_autocomplete_clear.setVisibility(View.GONE);
+                    }
+                }
+            });
+
             putCustomMarkers();
         } catch (IOException e) {
             e.printStackTrace();
@@ -195,15 +172,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+        GeoSearchResult result = (GeoSearchResult) adapterView.getItemAtPosition(position);
+        geo_autocomplete.setText(result.getAddress());
+    }
+
+    @Override
     public void onClick(View view) {
         if (view.equals(findViewById(R.id.search_button))) {
             LatLng origin = currentLocation;
             LatLng dest = null;
             try {
                 TextView address = findViewById(R.id.geo_autocomplete);
-                if(address.getText().toString() != "") {
+                if (address.getText().toString() != "") {
                     dest = getCoordinatesFromAddress(address.getText().toString());
-                    if(!dest.equals(null)) {
+                    if (!dest.equals(null)) {
                         isNavigate = true;
                         navigation(origin, dest);
                         drawMarkerAtCurrentLocation(dest);
@@ -212,9 +195,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
-        }
-         else if (view.equals(findViewById(R.id.accident_toggle))) {
+        } else if (view.equals(findViewById(R.id.geo_autocomplete_clear))) {
+            geo_autocomplete.setText("");
+            isNavigate = false;
+            navigationRoute.remove();
+            destinationMarker.remove();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+        } else if (view.equals(findViewById(R.id.accident_toggle))) {
             showNewspaperMarkers[0] = !showNewspaperMarkers[0];
             toggleNewsMarkers(view);
         } else if (view.equals(findViewById(R.id.harrassment_toggle))) {
@@ -613,7 +600,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            if(lineOptions.getPoints().size() >0 )
+            if (lineOptions.getPoints().size() > 0)
                 navigationRoute = mMap.addPolyline(lineOptions);
         }
     }
