@@ -14,6 +14,7 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
@@ -69,6 +70,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
     private boolean[] showNewspaperMarkers = {false, false, false, false, false};
     LatLng currentLocation;
+    LatLng destination;
+    LatLng origin;
     private boolean isNavigate = false;
     private Polyline navigationRoute;
     private Integer THRESHOLD = 2;
@@ -76,6 +79,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private ImageView geo_autocomplete_clear;
     private MarkerOptions reviewMarker;
     private Marker actualReviewMarker;
+    List<LatLng> safePoints = new ArrayList<>();
     public static final int LOCATION_UPDATE_MIN_DISTANCE = 10;
     public static final int LOCATION_UPDATE_MIN_TIME = 5000;
     private static final int INITIAL_REQUEST = 1337;
@@ -161,12 +165,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onClick(View view) {
         if (view.equals(findViewById(R.id.search_button))) {
-            LatLng origin = currentLocation;
+            origin = currentLocation;
             try {
                 TextView address = findViewById(R.id.geo_autocomplete);
                 if (!address.getText().toString().isEmpty()) {
                     LatLng dest = getCoordinatesFromAddress(address.getText().toString());
                     if (!dest.equals(null)) {
+                        destination = dest;
                         isNavigate = true;
                         navigation(origin, dest);
                         drawMarkerAtCurrentLocation(dest);
@@ -179,6 +184,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             geo_autocomplete.setText("");
             isNavigate = false;
             navigationRoute.remove();
+            navigationRoute = null;
             destinationMarker.remove();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         } else if (view.equals(findViewById(R.id.accident_toggle))) {
@@ -274,7 +280,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onLocationChanged(Location location) {
             if (location != null) {
                 currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                currentLocationMarker.setPosition(currentLocation);
+                if(currentLocationMarker != null)
+                    currentLocationMarker.setPosition(currentLocation);
+                else
+                    currentLocationMarker = mMap.addMarker(new MarkerOptions()
+                            .position(currentLocation)
+                            .title("Current Position"));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 mLocationManager.removeUpdates(mLocationListener);
             }
@@ -345,8 +356,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
             currentLocationMarker = mMap.addMarker(new MarkerOptions()
                     .position(currentLocation)
-                    .title("Current Position")
-                    .draggable(true));
+                    .title("Current Position"));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         }
     }
@@ -367,6 +377,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         for (String issue : issuesAndAddresses.keySet()) {
             for (String address : issuesAndAddresses.get(issue)) {
                 LatLng coordinates = getCoordinatesFromAddress(address);
+                System.out.println("Printing markers " + coordinates.latitude + " : " + coordinates.longitude);
                 Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).title(issue + " markers").visible(false));
                 switch (issue) {
                     case "accident":
@@ -436,6 +447,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void navigation(LatLng origin, LatLng dest) {
+        if(!safePoints.isEmpty())
+            safePoints = new ArrayList<>();
         String url = getDirectionsUrl(origin, dest);
         DownloadTask downloadTask = new DownloadTask();
         // Start downloading json data from Google Directions API
@@ -569,8 +582,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            if (lineOptions.getPoints().size() > 0)
+            if (lineOptions!=null && lineOptions.getPoints().size()>0 && navigationRoute == null)
                 navigationRoute = mMap.addPolyline(lineOptions);
+
+            generateSafeRoute(points);
         }
     }
 
@@ -625,6 +640,94 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 System.out.println("Incorrect id calls toggle markers");
         }
     }
+
+    private LatLng isInsideCircle(LatLng queryPoint, double radius)
+    {
+        for(int i=0;i<newspaperMarkers.get("accident").size();i++) {
+            LatLng center = newspaperMarkers.get("accident").get(i).getPosition();
+            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
+            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+                return center;
+        }
+        for(int i=0;i<newspaperMarkers.get("theft").size();i++) {
+            LatLng center = newspaperMarkers.get("theft").get(i).getPosition();
+            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
+            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+                return center;
+        }
+        for(int i=0;i<newspaperMarkers.get("harrassment").size();i++) {
+            LatLng center = newspaperMarkers.get("harrassment").get(i).getPosition();
+            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
+            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+                return center;
+        }
+        return null;
+    }
+
+    private LatLng isOutsideCircle(LatLng queryPoint, double radius)
+    {
+        for(int i=0;i<newspaperMarkers.get("police").size();i++) {
+            LatLng center = newspaperMarkers.get("police").get(i).getPosition();
+           // System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
+            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+                return center;
+        }
+        for(int i=0;i<newspaperMarkers.get("light").size();i++) {
+            LatLng center = newspaperMarkers.get("light").get(i).getPosition();
+            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
+            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+                return center;
+        }
+        return null;
+    }
+
+    private LatLng generateNewPoint(LatLng oldPoint, LatLng referencePoint, double radius)
+    {
+        double distance = Math.sqrt(Math.pow(2, referencePoint.latitude - oldPoint.latitude) + Math.pow(2, referencePoint.longitude - oldPoint.longitude));
+        double newLat = radius*(oldPoint.latitude - referencePoint.latitude)/distance + referencePoint.latitude;
+        double newLng = radius*(oldPoint.longitude - referencePoint.longitude)/distance + referencePoint.longitude;
+        LatLng newPoint = new LatLng(newLat,newLng);
+        //newPoint = new LatLng(2*oldPoint.latitude- referencePoint.latitude, 2*oldPoint.longitude - referencePoint.longitude);
+        return newPoint;
+    }
+
+    private void generateSafeRoute(List<LatLng> FastestPath)
+    {
+        int index = 0;
+        LatLng danger = null;
+        LatLng safe = null;
+        while( FastestPath!=null && index<FastestPath.size() && FastestPath.get(index) != destination) {
+            while ((index < FastestPath.size() && (danger = isInsideCircle(FastestPath.get(index), 1.30)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1.50)) == null) || FastestPath.get(0) == origin) {
+                safePoints.add(FastestPath.get(index));
+                index++;
+            }
+            if (danger != null) {
+                LatLng nextPoint = generateNewPoint(FastestPath.get(index),danger, 1.30);
+                System.out.println(danger + " : " + FastestPath.get(index) + " : " + nextPoint);
+                String url = getDirectionsUrl(nextPoint, destination);
+                DownloadTask downloadTask = new DownloadTask();
+                // Start downloading json data from Google Directions API
+                downloadTask.execute(url);
+            }
+            else if(safe !=null)
+            {
+                String url = getDirectionsUrl(safe, destination);
+                DownloadTask downloadTask = new DownloadTask();
+                // Start downloading json data from Google Directions API
+                downloadTask.execute(url);
+            }
+            break;
+        }
+        if(FastestPath == null || index >= FastestPath.size() || FastestPath.get(index) == destination)
+        {
+            PolylineOptions lineOptions = new PolylineOptions();
+            lineOptions.addAll(safePoints);
+            lineOptions.width(10);
+            lineOptions.color(Color.RED);
+            mMap.addPolyline(lineOptions);
+        }
+    }
+
 }
 
 
