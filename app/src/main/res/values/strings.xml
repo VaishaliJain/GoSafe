@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">GoSafe</string>
-    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_maps">GoSafe</string>
     <string name="title_activity_main">MainActivity</string>
 </resources>
