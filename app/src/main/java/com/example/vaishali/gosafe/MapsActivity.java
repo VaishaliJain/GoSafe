@@ -19,6 +19,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.google.android.gms.common.api.Status;
@@ -57,14 +58,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     private LocationManager mLocationManager;
     private FloatingActionButton harrassment_toggle;
-    private FloatingActionButton choice_toggle;
     private FloatingActionButton police_toggle;
     private FloatingActionButton theft_toggle;
     private FloatingActionButton accident_toggle;
     private FloatingActionButton light_toggle;
+    private FloatingActionButton navigate_button;
     private boolean choice_toggle_value = false;
     private Marker currentLocationMarker;
     private View placeAutocompleteClear;
+    private View placeAutocompleteClearFrom;
     private Marker destinationMarker;
     private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
     private boolean[] showNewspaperMarkers = {false, false, false, false, false};
@@ -75,9 +77,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean isSafeNavigation = false;
     private Polyline navigationRoute;
     private PlaceAutocompleteFragment autocompleteFragment;
+    private PlaceAutocompleteFragment autocompleteFragmentFrom;
     private Polyline safeRoute;
-    private MarkerOptions reviewMarker;
-    private Marker actualReviewMarker;
+    private Marker reviewMarker;
+    private Marker originMarker;
     List<LatLng> safePoints = new ArrayList<>();
     public static final int LOCATION_UPDATE_MIN_DISTANCE = 10;
     public static final int LOCATION_UPDATE_MIN_TIME = 5000;
@@ -104,6 +107,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         autocompleteFragment.setOnPlaceSelectedListener(placeSelectionListener);
         placeAutocompleteClear = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_clear_button);
         placeAutocompleteClear.setOnClickListener(this);
+
+        autocompleteFragmentFrom = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment_from);
+        autocompleteFragmentFrom.setOnPlaceSelectedListener(fromPlaceSelectionListener);
+        autocompleteFragmentFrom.getView().setVisibility(View.GONE);
+        EditText fromPlace = autocompleteFragmentFrom.getView().findViewById(R.id.place_autocomplete_search_input);
+        fromPlace.setHint("From Location");
+        placeAutocompleteClearFrom = autocompleteFragmentFrom.getView().findViewById(R.id.place_autocomplete_clear_button);
+        placeAutocompleteClearFrom.setOnClickListener(this);
     }
 
     /**
@@ -136,7 +148,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             light_toggle = findViewById(R.id.light_toggle);
             light_toggle.setOnClickListener(this);
 
-            choice_toggle = findViewById(R.id.choice_toggle);
+            navigate_button = findViewById(R.id.navigate_button);
+            navigate_button.setVisibility(View.GONE);
+            navigate_button.setOnClickListener(this);
+
+            FloatingActionButton choice_toggle = findViewById(R.id.choice_toggle);
             choice_toggle.setOnClickListener(this);
 
             putCustomMarkers();
@@ -152,7 +168,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onClick(View view) {
         if (view.equals(placeAutocompleteClear)) {
             autocompleteFragment.setText("");
-            isNavigate = false;
             if (navigationRoute != null)
                 navigationRoute.remove();
             navigationRoute = null;
@@ -163,6 +178,43 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 destinationMarker.remove();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
             view.setVisibility(View.GONE);
+        } else if (view.equals(placeAutocompleteClearFrom)) {
+            autocompleteFragmentFrom.setText("");
+            if (navigationRoute != null)
+                navigationRoute.remove();
+            navigationRoute = null;
+            if (safeRoute != null)
+                safeRoute.remove();
+            safeRoute = null;
+            if (originMarker != null)
+                originMarker.remove();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+            view.setVisibility(View.GONE);
+        } else if (view.equals(findViewById(R.id.navigate_button))) {
+            isNavigate = !isNavigate;
+            if (isNavigate) {
+                autocompleteFragmentFrom.getView().setVisibility(View.VISIBLE);
+                EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
+                fromPlace.setHint("To Location");
+                //view.setBackgroundColor(Color.BLUE);
+            } else {
+                autocompleteFragmentFrom.getView().setVisibility(View.GONE);
+                EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
+                fromPlace.setHint("Search");
+                //view.setBackgroundColor(Color.GREEN);
+                if (navigationRoute != null)
+                    navigationRoute.remove();
+                navigationRoute = null;
+                if (safeRoute != null)
+                    safeRoute.remove();
+                safeRoute = null;
+                if (destinationMarker != null)
+                    destinationMarker.remove();
+                if (originMarker != null)
+                    originMarker.remove();
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+                view.setVisibility(View.GONE);
+            }
         } else if (view.equals(findViewById(R.id.accident_toggle))) {
             showNewspaperMarkers[0] = !showNewspaperMarkers[0];
             toggleNewsMarkers(view);
@@ -198,20 +250,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapClick(LatLng latLng) {
-        if (actualReviewMarker != null) {
-            actualReviewMarker.remove();
+        if (reviewMarker != null) {
+            reviewMarker.remove();
         }
-        reviewMarker = new MarkerOptions().position(latLng);
-        reviewMarker.title(getAddressFromLatLng(latLng));
-        reviewMarker.icon(BitmapDescriptorFactory.defaultMarker());
-        actualReviewMarker = mMap.addMarker(reviewMarker);
+        MarkerOptions reviewMarkerOptions = new MarkerOptions().position(latLng);
+        reviewMarkerOptions.title(getAddressFromLatLng(latLng));
+        reviewMarkerOptions.icon(BitmapDescriptorFactory.defaultMarker());
+        reviewMarker = mMap.addMarker(reviewMarkerOptions);
         Toast toast = Toast.makeText(getApplicationContext(), "Please click on the marker to submit a review.", Toast.LENGTH_SHORT);
         toast.show();
     }
 
     @Override
     public boolean onMarkerClick(Marker marker) {
-        if (marker.equals(actualReviewMarker)) {
+        if (marker.equals(reviewMarker)) {
             Intent intent = new Intent(MapsActivity.this, UserFormActivity.class);
             startActivity(intent);
             marker.remove();
@@ -222,10 +274,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onBackPressed() {
-        if (actualReviewMarker != null)
-            actualReviewMarker.remove();
+        if (isNavigate) {
+            autocompleteFragmentFrom.getView().setVisibility(View.GONE);
+            EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
+            fromPlace.setHint("Search");
+            //view.setBackgroundColor(Color.GREEN);
+            if (navigationRoute != null)
+                navigationRoute.remove();
+            navigationRoute = null;
+            if (safeRoute != null)
+                safeRoute.remove();
+            safeRoute = null;
+            if (destinationMarker != null)
+                destinationMarker.remove();
+            if (originMarker != null)
+                originMarker.remove();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+            findViewById(R.id.navigate_button).setVisibility(View.GONE);
+            isNavigate = !isNavigate;
+        }
+        if (reviewMarker != null)
+            reviewMarker.remove();
         autocompleteFragment.setText("");
-        isNavigate = false;
         if (navigationRoute != null)
             navigationRoute.remove();
         navigationRoute = null;
@@ -250,17 +320,40 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return address;
     }
 
+    private PlaceSelectionListener fromPlaceSelectionListener = new PlaceSelectionListener() {
+        @Override
+        public void onPlaceSelected(Place place) {
+            origin = place.getLatLng();
+            originMarker = mMap.addMarker(new MarkerOptions()
+                    .position(origin)
+                    .title("Origin"));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(origin, 12));
+
+            if (isNavigate && (destination != null)) {
+                navigation(origin, destination);
+            }
+        }
+
+        @Override
+        public void onError(Status status) {
+            System.out.println("An error occurred: " + status);
+        }
+    };
+
     private PlaceSelectionListener placeSelectionListener = new PlaceSelectionListener() {
         @Override
         public void onPlaceSelected(Place place) {
-            System.out.println(place.getName());
-            origin = currentLocation;
-            LatLng dest = place.getLatLng();
-            if (!dest.equals(null)) {
-                destination = dest;
-                isNavigate = true;
-                navigation(origin, dest);
-                drawMarkerAtCurrentLocation(dest);
+            destination = place.getLatLng();
+            if (isNavigate) {
+                if (origin == null)
+                    origin = currentLocation;
+                navigation(origin, destination);
+                drawMarkerAtDestination(destination);
+
+            } else {
+                findViewById(R.id.navigate_button).setVisibility(View.VISIBLE);
+                LatLng dest = place.getLatLng();
+                drawMarkerAtDestination(dest);
             }
         }
 
@@ -299,19 +392,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     };
 
-    private void drawMarkerAtCurrentLocation(LatLng location) {
+    private void drawMarkerAtDestination(LatLng location) {
+        destinationMarker = mMap.addMarker(new MarkerOptions()
+                .position(location)
+                .title("Destination")
+                .draggable(true));
         if (!isNavigate) {
-            mMap.addMarker(new MarkerOptions()
-                    .position(location)
-                    .title("Current Position")
-                    .draggable(true));
-
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
         } else {
-            destinationMarker = mMap.addMarker(new MarkerOptions()
-                    .position(location)
-                    .title("Current Position")
-                    .draggable(true));
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             builder.include(currentLocation);
             builder.include(location);
