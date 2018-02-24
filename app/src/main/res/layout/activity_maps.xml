@@ -11,7 +11,10 @@
         android:id="@+id/place_autocomplete_fragment"
         android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
         android:layout_width="match_parent"
-        android:layout_height="37dp" />
+        android:layout_height="40dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        tools:layout_marginVertical="10dp" />
 
     <RelativeLayout
         android:layout_width="match_parent"
