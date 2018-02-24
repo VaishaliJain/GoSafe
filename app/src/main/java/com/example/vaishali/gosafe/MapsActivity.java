@@ -645,20 +645,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     {
         for(int i=0;i<newspaperMarkers.get("accident").size();i++) {
             LatLng center = newspaperMarkers.get("accident").get(i).getPosition();
-            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
-            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+            float[] results = new float[1];
+            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            System.out.println(results[0]);
+            if ( results[0] < radius)
                 return center;
         }
         for(int i=0;i<newspaperMarkers.get("theft").size();i++) {
             LatLng center = newspaperMarkers.get("theft").get(i).getPosition();
-            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
-            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+            float[] results = new float[1];
+            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            System.out.println(results[0]);
+            if( results[0] < radius )
                 return center;
         }
         for(int i=0;i<newspaperMarkers.get("harrassment").size();i++) {
             LatLng center = newspaperMarkers.get("harrassment").get(i).getPosition();
-            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
-            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+            float[] results = new float[1];
+            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            System.out.println(results[0]);
+            if(results[0] < radius);
                 return center;
         }
         return null;
@@ -668,14 +674,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     {
         for(int i=0;i<newspaperMarkers.get("police").size();i++) {
             LatLng center = newspaperMarkers.get("police").get(i).getPosition();
-           // System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
-            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+            float[] results = new float[1];
+            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            System.out.println(results[0]);
+            if(results[0] < radius);
                 return center;
         }
         for(int i=0;i<newspaperMarkers.get("light").size();i++) {
             LatLng center = newspaperMarkers.get("light").get(i).getPosition();
-            //System.out.println(Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)));
-            if (Math.sqrt(Math.pow(2, center.latitude - queryPoint.latitude) + Math.pow(2, center.longitude - queryPoint.longitude)) < radius)
+            float[] results = new float[1];
+            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            System.out.println(results[0]);
+            if(results[0] < radius);
                 return center;
         }
         return null;
@@ -696,13 +706,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         int index = 0;
         LatLng danger = null;
         LatLng safe = null;
-        while( FastestPath!=null && index<FastestPath.size() && FastestPath.get(index) != destination) {
-            while ((index < FastestPath.size() && (danger = isInsideCircle(FastestPath.get(index), 1.30)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1.50)) == null) || FastestPath.get(0) == origin) {
+        if( FastestPath!=null && index<FastestPath.size() && FastestPath.get(index) != destination) {
+            //while ((index < FastestPath.size() && (danger = isInsideCircle(FastestPath.get(index), 1.30)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1.50)) == null) || (FastestPath.get(0) == origin && FastestPath.get(index) != destination )) {
+              while(index<FastestPath.size()&&(FastestPath.get(index) == origin ||( (danger = isInsideCircle(FastestPath.get(index), 1000)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1500)) == null && FastestPath.get(index) != destination ) )){
                 safePoints.add(FastestPath.get(index));
                 index++;
             }
             if (danger != null) {
-                LatLng nextPoint = generateNewPoint(FastestPath.get(index),danger, 1.30);
+                System.out.println("Size of safe route: " + safePoints.size());
+                LatLng nextPoint = generateNewPoint(FastestPath.get(index),danger, 1.35);
                 System.out.println(danger + " : " + FastestPath.get(index) + " : " + nextPoint);
                 String url = getDirectionsUrl(nextPoint, destination);
                 DownloadTask downloadTask = new DownloadTask();
@@ -711,14 +723,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             else if(safe !=null)
             {
+                System.out.println("Size of safe route: " + safePoints.size());
                 String url = getDirectionsUrl(safe, destination);
                 DownloadTask downloadTask = new DownloadTask();
                 // Start downloading json data from Google Directions API
                 downloadTask.execute(url);
             }
-            break;
         }
-        if(FastestPath == null || index >= FastestPath.size() || FastestPath.get(index) == destination)
+        if(FastestPath == null || index >= FastestPath.size())
         {
             PolylineOptions lineOptions = new PolylineOptions();
             lineOptions.addAll(safePoints);
