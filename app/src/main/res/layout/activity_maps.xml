@@ -49,15 +49,6 @@
             android:layout_marginRight="239dp">
 
             <android.support.design.widget.FloatingActionButton
-                android:id="@+id/navigate_button"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentTop="true"
-                android:clickable="true"
-                app:backgroundTint="@android:color/holo_green_dark"
-                app:fabSize="normal" />
-
-            <android.support.design.widget.FloatingActionButton
                 android:id="@+id/choice_toggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -137,6 +128,22 @@
                 app:srcCompat="@drawable/theft" />
 
         </RelativeLayout>
+
+        <Button
+            android:id="@+id/navigate_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginEnd="17dp"
+            android:layout_marginRight="17dp"
+            android:layout_marginTop="15dp"
+            android:background="@color/colorPrimary"
+            android:paddingHorizontal="10dp"
+            android:paddingVertical="10dp"
+            android:textColor="#ffffff"
+            android:textSize="12sp" />
 
     </RelativeLayout>
 

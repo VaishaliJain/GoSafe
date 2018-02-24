@@ -19,6 +19,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -52,6 +53,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_AZURE;
+import static com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_GREEN;
+import static com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_YELLOW;
+
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
         GoogleMap.OnMarkerClickListener, View.OnClickListener {
 
@@ -62,7 +67,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FloatingActionButton theft_toggle;
     private FloatingActionButton accident_toggle;
     private FloatingActionButton light_toggle;
-    private FloatingActionButton navigate_button;
+    private Button navigate_button;
     private boolean choice_toggle_value = false;
     private Marker currentLocationMarker;
     private View placeAutocompleteClear;
@@ -194,11 +199,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             isNavigate = !isNavigate;
             if (isNavigate) {
                 autocompleteFragmentFrom.getView().setVisibility(View.VISIBLE);
+                Button navigation = (Button)findViewById(R.id.navigate_button);
+                navigation.setText("Exit Navigation");
                 EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
                 fromPlace.setHint("To Location");
                 //view.setBackgroundColor(Color.BLUE);
             } else {
                 autocompleteFragmentFrom.getView().setVisibility(View.GONE);
+                autocompleteFragmentFrom.setText("");
                 EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
                 fromPlace.setHint("Search");
                 //view.setBackgroundColor(Color.GREEN);
@@ -274,6 +282,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onBackPressed() {
+        findViewById(R.id.navigate_button).setVisibility(View.GONE);
         if (isNavigate) {
             autocompleteFragmentFrom.getView().setVisibility(View.GONE);
             EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
@@ -290,7 +299,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (originMarker != null)
                 originMarker.remove();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
-            findViewById(R.id.navigate_button).setVisibility(View.GONE);
             isNavigate = !isNavigate;
         }
         if (reviewMarker != null)
@@ -326,6 +334,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             origin = place.getLatLng();
             originMarker = mMap.addMarker(new MarkerOptions()
                     .position(origin)
+                    .icon(getMarkerIcon("#DB7093"))
                     .title("Origin"));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(origin, 12));
 
@@ -352,6 +361,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             } else {
                 findViewById(R.id.navigate_button).setVisibility(View.VISIBLE);
+                Button navigate = findViewById(R.id.navigate_button);
+                navigate.setText("Navigate");
                 LatLng dest = place.getLatLng();
                 drawMarkerAtDestination(dest);
             }
@@ -373,7 +384,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 else
                     currentLocationMarker = mMap.addMarker(new MarkerOptions()
                             .position(currentLocation)
-                            .title("Current Position"));
+                            .title("Current Position")
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 mLocationManager.removeUpdates(mLocationListener);
             }
@@ -396,6 +408,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         destinationMarker = mMap.addMarker(new MarkerOptions()
                 .position(location)
                 .title("Destination")
+                .icon(getMarkerIcon("#DB7093"))
                 .draggable(true));
         if (!isNavigate) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
@@ -439,7 +452,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
             currentLocationMarker = mMap.addMarker(new MarkerOptions()
                     .position(currentLocation)
-                    .title("Current Position"));
+                    .title("Current Position")
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         }
     }
@@ -481,7 +495,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         break;
                     case "theft":
                         theftMarkers.add(marker);
-                        marker.setIcon(getMarkerIcon("#ff669900"));
+                        marker.setIcon(getMarkerIcon("#556b2f"));
                         break;
                     default:
                         System.out.println("Invalid issue found");
