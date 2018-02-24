@@ -25,6 +25,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -233,6 +234,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         reviewMarker.title(getAddressFromLatLng(latLng));
         reviewMarker.icon(BitmapDescriptorFactory.defaultMarker());
         actualReviewMarker = mMap.addMarker(reviewMarker);
+        Toast toast = Toast.makeText(getApplicationContext(), "Please click on the marker to submit a review.", Toast.LENGTH_SHORT);
+        toast.show();
     }
 
     @Override
@@ -244,6 +247,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return true;
         }
         return false;
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        if(actualReviewMarker!=null)
+            actualReviewMarker.remove();
+        geo_autocomplete.setText("");
+        isNavigate = false;
+        if(navigationRoute!=null)
+            navigationRoute.remove();
+        navigationRoute = null;
+        if(safeRoute!=null)
+            safeRoute.remove();
+        safeRoute = null;
+        if(destinationMarker!=null)
+            destinationMarker.remove();
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
     }
 
     private String getAddressFromLatLng(LatLng latLng) {
@@ -746,7 +767,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 System.out.println("Size of safe route: " + safePoints.size());
                 LatLng nextPoint = generateNewPoint(FastestPath.get(index),danger, 0.75);
                 System.out.println("Size of safe route: " + safePoints.size());
-                mMap.addMarker(new MarkerOptions().position(nextPoint));
+//                mMap.addMarker(new MarkerOptions().position(nextPoint));
 //                String request = "https://roads.googleapis.com/v1/snapToRoads?path="+
 //                        String.valueOf(safePoints.get(safePoints.size()-1).latitude)+","+String.valueOf(safePoints.get(safePoints.size()-1).longitude)+
 //                        "|"+String.valueOf(nextPoint.latitude)+","+String.valueOf(nextPoint.longitude)+
@@ -762,7 +783,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             else if(safe !=null)
             {
                 System.out.println("Size of safe route: " + safePoints.size());
-                mMap.addMarker(new MarkerOptions().position(safe));
+//                mMap.addMarker(new MarkerOptions().position(safe));
                 isSafeNavigation = false;
                 String url = getDirectionsUrl(safe, destination);
                 DownloadTask downloadTask = new DownloadTask();
