@@ -73,7 +73,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LatLng destination;
     LatLng origin;
     private boolean isNavigate = false;
+    private boolean isSafeNavigation = false;
     private Polyline navigationRoute;
+    private Polyline safeRoute;
     private Integer THRESHOLD = 2;
     private DelayAutoCompleteTextView geo_autocomplete;
     private ImageView geo_autocomplete_clear;
@@ -185,6 +187,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             isNavigate = false;
             navigationRoute.remove();
             navigationRoute = null;
+            safeRoute.remove();
+            safeRoute = null;
             destinationMarker.remove();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         } else if (view.equals(findViewById(R.id.accident_toggle))) {
@@ -585,7 +589,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (lineOptions!=null && lineOptions.getPoints().size()>0 && navigationRoute == null)
                 navigationRoute = mMap.addPolyline(lineOptions);
 
-            generateSafeRoute(points);
+            try {
+                if(isSafeNavigation)
+                    safePoints.addAll(points);
+                else
+                    generateSafeRoute(points);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -664,7 +675,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             float[] results = new float[1];
             Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
             System.out.println(results[0]);
-            if(results[0] < radius);
+            if(results[0] < radius)
                 return center;
         }
         return null;
@@ -677,7 +688,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             float[] results = new float[1];
             Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
             System.out.println(results[0]);
-            if(results[0] < radius);
+            if(results[0] < radius)
                 return center;
         }
         for(int i=0;i<newspaperMarkers.get("light").size();i++) {
@@ -685,7 +696,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             float[] results = new float[1];
             Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
             System.out.println(results[0]);
-            if(results[0] < radius);
+            if(results[0] < radius)
                 return center;
         }
         return null;
@@ -693,29 +704,56 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private LatLng generateNewPoint(LatLng oldPoint, LatLng referencePoint, double radius)
     {
-        double distance = Math.sqrt(Math.pow(2, referencePoint.latitude - oldPoint.latitude) + Math.pow(2, referencePoint.longitude - oldPoint.longitude));
-        double newLat = radius*(oldPoint.latitude - referencePoint.latitude)/distance + referencePoint.latitude;
-        double newLng = radius*(oldPoint.longitude - referencePoint.longitude)/distance + referencePoint.longitude;
-        LatLng newPoint = new LatLng(newLat,newLng);
+        double dLon = (oldPoint.longitude-referencePoint.longitude);
+        double y = Math.sin(dLon) * Math.cos(oldPoint.latitude);
+        double x = Math.cos(referencePoint.latitude)*Math.sin(oldPoint.latitude) - Math.sin(referencePoint.latitude)*Math.cos(oldPoint.latitude)*Math.cos(dLon);
+        double brng = Math.toDegrees((Math.atan2(y, x)));
+        brng = Math.toRadians(360 - ((brng + 360) % 360));
+        double R_earth = 6378.1;
+
+        double lat1 = Math.toRadians(referencePoint.latitude);
+        double lon1 = Math.toRadians(referencePoint.longitude);
+
+        double lat2 = Math.asin( Math.sin(lat1)*Math.cos(radius/R_earth) +
+                      Math.cos(lat1)*Math.sin(radius/R_earth)*Math.cos(brng));
+
+        double lon2 = lon1 + Math.atan2(Math.sin(brng)*Math.sin(radius/R_earth)*Math.cos(lat1),
+                      Math.cos(radius/R_earth)-Math.sin(lat1)*Math.sin(lat2));
+
+        lat2 = Math.toDegrees(lat2);
+        lon2 = Math.toDegrees(lon2);
+        LatLng newPoint = new LatLng(lat2,lon2);
+        System.out.println(newPoint);
+        String url = getDirectionsUrl(safePoints.get(safePoints.size()-1), newPoint);
+        isSafeNavigation = true;
+        DownloadTask downloadTask = new DownloadTask();
+        // Start downloading json data from Google Directions API
+        downloadTask.execute(url);
         //newPoint = new LatLng(2*oldPoint.latitude- referencePoint.latitude, 2*oldPoint.longitude - referencePoint.longitude);
         return newPoint;
     }
 
-    private void generateSafeRoute(List<LatLng> FastestPath)
-    {
+    private void generateSafeRoute(List<LatLng> FastestPath) throws IOException {
         int index = 0;
         LatLng danger = null;
         LatLng safe = null;
         if( FastestPath!=null && index<FastestPath.size() && FastestPath.get(index) != destination) {
-            //while ((index < FastestPath.size() && (danger = isInsideCircle(FastestPath.get(index), 1.30)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1.50)) == null) || (FastestPath.get(0) == origin && FastestPath.get(index) != destination )) {
-              while(index<FastestPath.size()&&(FastestPath.get(index) == origin ||( (danger = isInsideCircle(FastestPath.get(index), 1000)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1500)) == null && FastestPath.get(index) != destination ) )){
+              while(index<FastestPath.size()&&(FastestPath.get(index) == origin ||( (danger = isInsideCircle(FastestPath.get(index), 500)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1000)) == null && FastestPath.get(index) != destination ) )){
                 safePoints.add(FastestPath.get(index));
                 index++;
             }
             if (danger != null) {
                 System.out.println("Size of safe route: " + safePoints.size());
-                LatLng nextPoint = generateNewPoint(FastestPath.get(index),danger, 1.35);
+                LatLng nextPoint = generateNewPoint(FastestPath.get(index),danger, 0.75);
+                System.out.println("Size of safe route: " + safePoints.size());
+                mMap.addMarker(new MarkerOptions().position(nextPoint));
+//                String request = "https://roads.googleapis.com/v1/snapToRoads?path="+
+//                        String.valueOf(safePoints.get(safePoints.size()-1).latitude)+","+String.valueOf(safePoints.get(safePoints.size()-1).longitude)+
+//                        "|"+String.valueOf(nextPoint.latitude)+","+String.valueOf(nextPoint.longitude)+
+//                        "&interpolate=true&key=AIzaSyB3DXSf4LgyqDhrrEhhqF17pRErfY-0YGk";
+//                String response = downloadUrl(request);
                 System.out.println(danger + " : " + FastestPath.get(index) + " : " + nextPoint);
+                isSafeNavigation = false;
                 String url = getDirectionsUrl(nextPoint, destination);
                 DownloadTask downloadTask = new DownloadTask();
                 // Start downloading json data from Google Directions API
@@ -724,6 +762,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             else if(safe !=null)
             {
                 System.out.println("Size of safe route: " + safePoints.size());
+                mMap.addMarker(new MarkerOptions().position(safe));
+                isSafeNavigation = false;
                 String url = getDirectionsUrl(safe, destination);
                 DownloadTask downloadTask = new DownloadTask();
                 // Start downloading json data from Google Directions API
@@ -736,7 +776,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             lineOptions.addAll(safePoints);
             lineOptions.width(10);
             lineOptions.color(Color.RED);
-            mMap.addPolyline(lineOptions);
+            safeRoute = mMap.addPolyline(lineOptions);
         }
     }
 
