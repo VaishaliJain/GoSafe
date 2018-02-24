@@ -7,55 +7,11 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <LinearLayout
+    <fragment
+        android:id="@+id/place_autocomplete_fragment"
+        android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="5dp"
-
-        android:orientation="horizontal">
-
-        <!--<EditText-->
-        <!--android:id="@+id/searchLocation"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:layout_weight="4"-->
-        <!--android:hint="Search Location Here" />-->
-
-        <com.example.vaishali.gosafe.DelayAutoCompleteTextView
-            android:id="@+id/geo_autocomplete"
-            android:layout_width="281dp"
-            android:layout_height="49dp"
-            android:layout_gravity="center_vertical"
-            android:layout_marginBottom="4dp"
-            android:layout_marginEnd="35dp"
-            android:layout_marginRight="35dp"
-            android:layout_marginTop="4dp"
-            android:background="@color/white"
-            android:dropDownWidth="fill_parent"
-            android:imeOptions="flagNoExtractUi|actionSearch"
-            android:inputType="textCapSentences"
-            android:padding="10dp" />
-
-        <ImageView
-            android:id="@+id/geo_autocomplete_clear"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|end"
-            android:layout_marginEnd="12dp"
-            android:layout_marginRight="12dp"
-            android:src="@drawable/ic_action_remove"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/search_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical|end"
-            android:adjustViewBounds="false"
-            android:cropToPadding="false"
-            android:src="@drawable/searchicon" />
-
-    </LinearLayout>
+        android:layout_height="37dp" />
 
     <RelativeLayout
         android:layout_width="match_parent"

@@ -14,18 +14,16 @@ import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.provider.Settings;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ImageView;
-import android.widget.TextView;
 
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocompleteFragment;
+import com.google.android.gms.location.places.ui.PlaceSelectionListener;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -53,11 +51,10 @@ import java.util.List;
 import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
-        GoogleMap.OnMarkerClickListener, View.OnClickListener, AdapterView.OnItemClickListener {
+        GoogleMap.OnMarkerClickListener, View.OnClickListener {
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
-    private ImageView searchLocationButton;
     private FloatingActionButton harrassment_toggle;
     private FloatingActionButton choice_toggle;
     private FloatingActionButton police_toggle;
@@ -66,6 +63,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FloatingActionButton light_toggle;
     private boolean choice_toggle_value = false;
     private Marker currentLocationMarker;
+    private View placeAutocompleteClear;
     private Marker destinationMarker;
     private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
     private boolean[] showNewspaperMarkers = {false, false, false, false, false};
@@ -74,9 +72,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LatLng origin;
     private boolean isNavigate = false;
     private Polyline navigationRoute;
-    private Integer THRESHOLD = 2;
-    private DelayAutoCompleteTextView geo_autocomplete;
-    private ImageView geo_autocomplete_clear;
+    private PlaceAutocompleteFragment autocompleteFragment;
     private MarkerOptions reviewMarker;
     private Marker actualReviewMarker;
     List<LatLng> safePoints = new ArrayList<>();
@@ -92,7 +88,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -100,6 +95,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(INITIAL_PERMS, INITIAL_REQUEST);
         }
+
+        autocompleteFragment = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autocompleteFragment.setOnPlaceSelectedListener(placeSelectionListener);
+        placeAutocompleteClear = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_clear_button);
+        placeAutocompleteClear.setOnClickListener(this);
     }
 
     /**
@@ -117,9 +118,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         getCurrentLocationAndMarkIt();
 
         try {
-            searchLocationButton = findViewById(R.id.search_button);
-            searchLocationButton.setOnClickListener(this);
-
             harrassment_toggle = findViewById(R.id.harrassment_toggle);
             harrassment_toggle.setOnClickListener(this);
 
@@ -138,15 +136,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             choice_toggle = findViewById(R.id.choice_toggle);
             choice_toggle.setOnClickListener(this);
 
-            geo_autocomplete_clear = findViewById(R.id.geo_autocomplete_clear);
-            geo_autocomplete_clear.setOnClickListener(this);
-
-            geo_autocomplete = findViewById(R.id.geo_autocomplete);
-            geo_autocomplete.setThreshold(THRESHOLD);
-            geo_autocomplete.setAdapter(new GeoAutoCompleteAdapter(this)); // 'this' is Activity instance
-            geo_autocomplete.setOnItemClickListener(this);
-            geo_autocomplete.addTextChangedListener(mTextWatcher);
-
             putCustomMarkers();
         } catch (IOException e) {
             e.printStackTrace();
@@ -157,36 +146,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
-        GeoSearchResult result = (GeoSearchResult) adapterView.getItemAtPosition(position);
-        geo_autocomplete.setText(result.getAddress());
-    }
-
-    @Override
     public void onClick(View view) {
-        if (view.equals(findViewById(R.id.search_button))) {
-            origin = currentLocation;
-            try {
-                TextView address = findViewById(R.id.geo_autocomplete);
-                if (!address.getText().toString().isEmpty()) {
-                    LatLng dest = getCoordinatesFromAddress(address.getText().toString());
-                    if (!dest.equals(null)) {
-                        destination = dest;
-                        isNavigate = true;
-                        navigation(origin, dest);
-                        drawMarkerAtCurrentLocation(dest);
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        } else if (view.equals(findViewById(R.id.geo_autocomplete_clear))) {
-            geo_autocomplete.setText("");
+        if (view.equals(placeAutocompleteClear)) {
+            autocompleteFragment.setText("");
             isNavigate = false;
             navigationRoute.remove();
             navigationRoute = null;
             destinationMarker.remove();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+            view.setVisibility(View.GONE);
         } else if (view.equals(findViewById(R.id.accident_toggle))) {
             showNewspaperMarkers[0] = !showNewspaperMarkers[0];
             toggleNewsMarkers(view);
@@ -222,7 +190,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onMapClick(LatLng latLng) {
-        if(actualReviewMarker!=null){
+        if (actualReviewMarker != null) {
             actualReviewMarker.remove();
         }
         reviewMarker = new MarkerOptions().position(latLng);
@@ -255,32 +223,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return address;
     }
 
-    private TextWatcher mTextWatcher = new TextWatcher() {
+    private PlaceSelectionListener placeSelectionListener = new PlaceSelectionListener() {
         @Override
-        public void onTextChanged(CharSequence s, int start, int before, int count) {
-        }
-
-        @Override
-        public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        }
-
-        @Override
-        public void afterTextChanged(Editable s) {
-            if (s.length() > 0) {
-                geo_autocomplete_clear.setVisibility(View.VISIBLE);
-            } else {
-                geo_autocomplete_clear.setVisibility(View.GONE);
+        public void onPlaceSelected(Place place) {
+            System.out.println(place.getName());
+            origin = currentLocation;
+            LatLng dest = place.getLatLng();
+            if (!dest.equals(null)) {
+                destination = dest;
+                isNavigate = true;
+                navigation(origin, dest);
+                drawMarkerAtCurrentLocation(dest);
             }
         }
-    };
 
+        @Override
+        public void onError(Status status) {
+            System.out.println("An error occurred: " + status);
+        }
+    };
 
     private LocationListener mLocationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
             if (location != null) {
                 currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
-                if(currentLocationMarker != null)
+                if (currentLocationMarker != null)
                     currentLocationMarker.setPosition(currentLocation);
                 else
                     currentLocationMarker = mMap.addMarker(new MarkerOptions()
@@ -447,7 +415,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void navigation(LatLng origin, LatLng dest) {
-        if(!safePoints.isEmpty())
+        if (!safePoints.isEmpty())
             safePoints = new ArrayList<>();
         String url = getDirectionsUrl(origin, dest);
         DownloadTask downloadTask = new DownloadTask();
@@ -582,10 +550,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
 
             // Drawing polyline in the Google Map for the i-th route
-            if (lineOptions!=null && lineOptions.getPoints().size()>0 && navigationRoute == null)
+            if (lineOptions != null && lineOptions.getPoints().size() > 0 && navigationRoute == null)
                 navigationRoute = mMap.addPolyline(lineOptions);
 
-            generateSafeRoute(points);
+            //generateSafeRoute(points);
         }
     }
 
@@ -641,88 +609,82 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private LatLng isInsideCircle(LatLng queryPoint, double radius)
-    {
-        for(int i=0;i<newspaperMarkers.get("accident").size();i++) {
+    private LatLng isInsideCircle(LatLng queryPoint, double radius) {
+        for (int i = 0; i < newspaperMarkers.get("accident").size(); i++) {
             LatLng center = newspaperMarkers.get("accident").get(i).getPosition();
             float[] results = new float[1];
-            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
             System.out.println(results[0]);
-            if ( results[0] < radius)
+            if (results[0] < radius)
                 return center;
         }
-        for(int i=0;i<newspaperMarkers.get("theft").size();i++) {
+        for (int i = 0; i < newspaperMarkers.get("theft").size(); i++) {
             LatLng center = newspaperMarkers.get("theft").get(i).getPosition();
             float[] results = new float[1];
-            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
             System.out.println(results[0]);
-            if( results[0] < radius )
+            if (results[0] < radius)
                 return center;
         }
-        for(int i=0;i<newspaperMarkers.get("harrassment").size();i++) {
+        for (int i = 0; i < newspaperMarkers.get("harrassment").size(); i++) {
             LatLng center = newspaperMarkers.get("harrassment").get(i).getPosition();
             float[] results = new float[1];
-            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
             System.out.println(results[0]);
-            if(results[0] < radius);
-                return center;
+            if (results[0] < radius) ;
+            return center;
         }
         return null;
     }
 
-    private LatLng isOutsideCircle(LatLng queryPoint, double radius)
-    {
-        for(int i=0;i<newspaperMarkers.get("police").size();i++) {
+    private LatLng isOutsideCircle(LatLng queryPoint, double radius) {
+        for (int i = 0; i < newspaperMarkers.get("police").size(); i++) {
             LatLng center = newspaperMarkers.get("police").get(i).getPosition();
             float[] results = new float[1];
-            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
             System.out.println(results[0]);
-            if(results[0] < radius);
-                return center;
+            if (results[0] < radius) ;
+            return center;
         }
-        for(int i=0;i<newspaperMarkers.get("light").size();i++) {
+        for (int i = 0; i < newspaperMarkers.get("light").size(); i++) {
             LatLng center = newspaperMarkers.get("light").get(i).getPosition();
             float[] results = new float[1];
-            Location.distanceBetween(center.latitude,center.longitude,queryPoint.latitude,queryPoint.longitude, results);
+            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
             System.out.println(results[0]);
-            if(results[0] < radius);
-                return center;
+            if (results[0] < radius) ;
+            return center;
         }
         return null;
     }
 
-    private LatLng generateNewPoint(LatLng oldPoint, LatLng referencePoint, double radius)
-    {
+    private LatLng generateNewPoint(LatLng oldPoint, LatLng referencePoint, double radius) {
         double distance = Math.sqrt(Math.pow(2, referencePoint.latitude - oldPoint.latitude) + Math.pow(2, referencePoint.longitude - oldPoint.longitude));
-        double newLat = radius*(oldPoint.latitude - referencePoint.latitude)/distance + referencePoint.latitude;
-        double newLng = radius*(oldPoint.longitude - referencePoint.longitude)/distance + referencePoint.longitude;
-        LatLng newPoint = new LatLng(newLat,newLng);
+        double newLat = radius * (oldPoint.latitude - referencePoint.latitude) / distance + referencePoint.latitude;
+        double newLng = radius * (oldPoint.longitude - referencePoint.longitude) / distance + referencePoint.longitude;
+        LatLng newPoint = new LatLng(newLat, newLng);
         //newPoint = new LatLng(2*oldPoint.latitude- referencePoint.latitude, 2*oldPoint.longitude - referencePoint.longitude);
         return newPoint;
     }
 
-    private void generateSafeRoute(List<LatLng> FastestPath)
-    {
+    private void generateSafeRoute(List<LatLng> FastestPath) {
         int index = 0;
         LatLng danger = null;
         LatLng safe = null;
-        if( FastestPath!=null && index<FastestPath.size() && FastestPath.get(index) != destination) {
+        if (FastestPath != null && index < FastestPath.size() && FastestPath.get(index) != destination) {
             //while ((index < FastestPath.size() && (danger = isInsideCircle(FastestPath.get(index), 1.30)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1.50)) == null) || (FastestPath.get(0) == origin && FastestPath.get(index) != destination )) {
-              while(index<FastestPath.size()&&(FastestPath.get(index) == origin ||( (danger = isInsideCircle(FastestPath.get(index), 1000)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1500)) == null && FastestPath.get(index) != destination ) )){
+            while (index < FastestPath.size() && (FastestPath.get(index) == origin || ((danger = isInsideCircle(FastestPath.get(index), 1000)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1500)) == null && FastestPath.get(index) != destination))) {
                 safePoints.add(FastestPath.get(index));
                 index++;
             }
             if (danger != null) {
                 System.out.println("Size of safe route: " + safePoints.size());
-                LatLng nextPoint = generateNewPoint(FastestPath.get(index),danger, 1.35);
+                LatLng nextPoint = generateNewPoint(FastestPath.get(index), danger, 1.35);
                 System.out.println(danger + " : " + FastestPath.get(index) + " : " + nextPoint);
                 String url = getDirectionsUrl(nextPoint, destination);
                 DownloadTask downloadTask = new DownloadTask();
                 // Start downloading json data from Google Directions API
                 downloadTask.execute(url);
-            }
-            else if(safe !=null)
-            {
+            } else if (safe != null) {
                 System.out.println("Size of safe route: " + safePoints.size());
                 String url = getDirectionsUrl(safe, destination);
                 DownloadTask downloadTask = new DownloadTask();
@@ -730,8 +692,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 downloadTask.execute(url);
             }
         }
-        if(FastestPath == null || index >= FastestPath.size())
-        {
+        if (FastestPath == null || index >= FastestPath.size()) {
             PolylineOptions lineOptions = new PolylineOptions();
             lineOptions.addAll(safePoints);
             lineOptions.width(10);
