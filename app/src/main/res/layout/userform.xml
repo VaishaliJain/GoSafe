@@ -102,7 +102,6 @@
             android:id="@+id/textView6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/Safe"
             android:layout_centerHorizontal="true"
             android:text="Please select the valid options:" />
 
