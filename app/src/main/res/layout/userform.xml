@@ -24,7 +24,7 @@
             android:layout_marginLeft="15dp"
             android:layout_marginStart="15dp"
             android:layout_marginTop="21dp"
-            android:text="Prone to accidents" />
+            android:text="Presence of CCTV cameras" />
 
         <CheckBox
             android:id="@+id/camera"
@@ -34,7 +34,7 @@
             android:layout_alignStart="@+id/accident"
             android:layout_below="@+id/textView6"
             android:layout_marginTop="37dp"
-            android:text="Presence of CCTV cameras" />
+            android:text="Police nearby" />
 
         <CheckBox
             android:id="@+id/harrassment"
@@ -54,7 +54,7 @@
             android:layout_alignStart="@+id/harrassment"
             android:layout_below="@+id/harrassment"
             android:layout_marginTop="20dp"
-            android:text="Absence of street lights" />
+            android:text="Prone to accidents" />
 
         <CheckBox
             android:id="@+id/police"
@@ -64,7 +64,7 @@
             android:layout_alignStart="@+id/light"
             android:layout_below="@+id/light"
             android:layout_marginTop="22dp"
-            android:text="Police nearby" />
+            android:text="Unsafe to carry valuables" />
 
         <CheckBox
             android:id="@+id/theft"
@@ -74,7 +74,7 @@
             android:layout_alignStart="@+id/police"
             android:layout_below="@+id/police"
             android:layout_marginTop="23dp"
-            android:text="Unsafe to carry valuables" />
+            android:text="Absence of street lights" />
 
         <Button
             android:id="@+id/submit"
