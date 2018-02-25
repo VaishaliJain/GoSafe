@@ -49,16 +49,24 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import static com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_AZURE;
-import static com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_GREEN;
-import static com.google.android.gms.maps.model.BitmapDescriptorFactory.HUE_YELLOW;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleMap.OnMapClickListener,
         GoogleMap.OnMarkerClickListener, View.OnClickListener {
+
+    public static final int Police_Weight = 3;
+    public static final int Light_Weight = 1;
+    public static final int Accident_Weight = 2;
+    public static final int Robbery_Weight = 1;
+    public static final int Harassment_Weight = 3;
+
 
     private GoogleMap mMap;
     private LocationManager mLocationManager;
@@ -79,7 +87,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     LatLng destination;
     LatLng origin;
     private boolean isNavigate = false;
-    private boolean isSafeNavigation = false;
     private Polyline navigationRoute;
     private PlaceAutocompleteFragment autocompleteFragment;
     private PlaceAutocompleteFragment autocompleteFragmentFrom;
@@ -99,8 +106,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -324,7 +330,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             address = geocoder
                     .getFromLocation(latLng.latitude, latLng.longitude, 1)
                     .get(0).getAddressLine(0);
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
+            e.printStackTrace();
         }
         return address;
     }
@@ -334,9 +342,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onPlaceSelected(Place place) {
             origin = place.getLatLng();
             originMarker = mMap.addMarker(new MarkerOptions()
-                    .position(origin)
-                    .icon(getMarkerIcon("#DB7093"))
-                    .title("Origin"));
+                                .position(origin)
+                                .icon(getMarkerIcon("#DB7093"))
+                                .title("Origin"));
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             builder.include(originMarker.getPosition());
             builder.include(destinationMarker.getPosition());
@@ -388,9 +396,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     currentLocationMarker.setPosition(currentLocation);
                 else
                     currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                            .position(currentLocation)
-                            .title("Current Position")
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
+                                                .position(currentLocation)
+                                                .title("Current Position")
+                                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 mLocationManager.removeUpdates(mLocationListener);
             }
@@ -411,10 +419,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void drawMarkerAtDestination(LatLng location) {
         destinationMarker = mMap.addMarker(new MarkerOptions()
-                .position(location)
-                .title("Destination")
-                .icon(getMarkerIcon("#DB7093"))
-                .draggable(true));
+                                .position(location)
+                                .title("Destination")
+                                .icon(getMarkerIcon("#DB7093"))
+                                .draggable(true));
         if (!isNavigate) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
         } else {
@@ -456,9 +464,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (location != null) {
             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
             currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                    .position(currentLocation)
-                    .title("Current Position")
-                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
+                                        .position(currentLocation)
+                                        .title("Current Position")
+                                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         }
     }
@@ -657,44 +665,74 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Executes in UI thread, after the parsing process
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-            ArrayList<LatLng> points = null;
-            PolylineOptions lineOptions = null;
+            ArrayList<LatLng> points                    = null;
+            PolylineOptions lineOptions                 = null;
+            HashMap<Integer, Integer> route_dangerLevel = new HashMap<Integer, Integer>();
 
             // Traversing through all the routes
-            for (int i = 0; i < result.size(); i++) {
-                points = new ArrayList<LatLng>();
-                lineOptions = new PolylineOptions();
+            for (int i = 0; i < result.size(); i++)
+            {
+                Log.d("Route: ", result.get(i).toString());
+                points            = new ArrayList<LatLng>();
+                lineOptions       = new PolylineOptions();
 
                 // Fetching i-th route
+                int danger_count  = 0;
+                int safety_count  = 0;
                 List<HashMap<String, String>> path = result.get(i);
 
                 // Fetching all the points in i-th route
-                for (int j = 0; j < path.size(); j++) {
+                for (int j = 0; j < path.size(); j++)
+                {
                     HashMap<String, String> point = path.get(j);
                     double lat = Double.parseDouble(point.get("lat"));
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
+
                     points.add(position);
+                    if(isInsideCircle(position, 500) != 0)
+                        danger_count++;
+                    if(isOutsideCircle(position, 1000) != 0)
+                        safety_count++;
                 }
 
-                // Adding all the points in the route to LineOptions
-                lineOptions.addAll(points);
-                lineOptions.width(10);
-                lineOptions.color(Color.parseColor("#4a80f5"));
+                //Best Path returned by Google Map API
+                if(i == 0)
+                {
+                    lineOptions.addAll(points);
+                    lineOptions.width(20);
+                    lineOptions.color(Color.parseColor("#4a80f5"));
+
+                    // Drawing polyline in the Google Map for the 0th route
+                    if (lineOptions.getPoints().size() > 0 && navigationRoute == null)
+                        navigationRoute = mMap.addPolyline(lineOptions);
+                }
+
+                route_dangerLevel.put(i, danger_count-safety_count);
             }
 
-            // Drawing polyline in the Google Map for the i-th route
-            if (lineOptions != null && lineOptions.getPoints().size() > 0 && navigationRoute == null)
-                navigationRoute = mMap.addPolyline(lineOptions);
+            //Get the Safest Route
+            Map<Integer, Integer> sortedMap = sortByValue(route_dangerLevel);
+            Map.Entry<Integer,Integer> entry = sortedMap.entrySet().iterator().next();
 
-//            try {
-//                if (isSafeNavigation)
-//                    safePoints.addAll(points);
-//                else
-//                    generateSafeRoute(points);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
+            List<HashMap<String, String>> path_route = result.get(entry.getKey());
+            for (int j = 0; j < path_route.size(); j++)
+            {
+                HashMap<String, String> point = path_route.get(j);
+                double lat                    = Double.parseDouble(point.get("lat"));
+                double lng                    = Double.parseDouble(point.get("lng"));
+                LatLng position               = new LatLng(lat, lng);
+
+                safePoints.add(position);
+            }
+
+            PolylineOptions option = new PolylineOptions();
+            option.addAll(safePoints);
+            option.width(10);
+            option.color(Color.GREEN);
+
+            if (option.getPoints().size() > 0 && safeRoute == null)
+                safeRoute = mMap.addPolyline(option);
         }
     }
 
@@ -750,125 +788,78 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private LatLng isInsideCircle(LatLng queryPoint, double radius) {
-        for (int i = 0; i < newspaperMarkers.get("accident").size(); i++) {
+    private int isInsideCircle(LatLng queryPoint, double radius)
+    {
+        int accidents = 0, theft = 0, harassment = 0;
+
+        for (int i = 0; i < newspaperMarkers.get("accident").size(); i++)
+        {
             LatLng center = newspaperMarkers.get("accident").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            System.out.println(results[0]);
-            if (results[0] < radius)
-                return center;
+            //System.out.println(results[0]);
+            if (results[0] <= radius)
+                accidents++;
         }
         for (int i = 0; i < newspaperMarkers.get("theft").size(); i++) {
             LatLng center = newspaperMarkers.get("theft").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            System.out.println(results[0]);
-            if (results[0] < radius)
-                return center;
+            //System.out.println(results[0]);
+            if (results[0] <= radius)
+                theft++;
         }
         for (int i = 0; i < newspaperMarkers.get("harrassment").size(); i++) {
             LatLng center = newspaperMarkers.get("harrassment").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            System.out.println(results[0]);
-            if (results[0] < radius)
-                return center;
+            //System.out.println(results[0]);
+            if (results[0] <= radius)
+                harassment++;
         }
-        return null;
+
+        return (accidents * Accident_Weight  + theft * Robbery_Weight + harassment * Harassment_Weight);
     }
 
-    private LatLng isOutsideCircle(LatLng queryPoint, double radius) {
+    private int isOutsideCircle(LatLng queryPoint, double radius) {
+
+        int police = 0, light = 0;
+
         for (int i = 0; i < newspaperMarkers.get("police").size(); i++) {
             LatLng center = newspaperMarkers.get("police").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            System.out.println(results[0]);
+            //System.out.println(results[0]);
             if (results[0] < radius)
-                return center;
+                police++;
         }
         for (int i = 0; i < newspaperMarkers.get("light").size(); i++) {
             LatLng center = newspaperMarkers.get("light").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            System.out.println(results[0]);
+            //System.out.println(results[0]);
             if (results[0] < radius)
-                return center;
+                light++;
         }
-        return null;
+
+        return (police * Police_Weight + light * Light_Weight);
     }
 
-    private LatLng generateNewPoint(LatLng oldPoint, LatLng referencePoint, double radius) {
-        double dLon = (oldPoint.longitude - referencePoint.longitude);
-        double y = Math.sin(dLon) * Math.cos(oldPoint.latitude);
-        double x = Math.cos(referencePoint.latitude) * Math.sin(oldPoint.latitude) - Math.sin(referencePoint.latitude) * Math.cos(oldPoint.latitude) * Math.cos(dLon);
-        double brng = Math.toDegrees((Math.atan2(y, x)));
-        brng = Math.toRadians(360 - ((brng + 360) % 360));
-        double R_earth = 6378.1;
+    private static Map<Integer, Integer> sortByValue(Map<Integer, Integer> unsortMap) {
 
-        double lat1 = Math.toRadians(referencePoint.latitude);
-        double lon1 = Math.toRadians(referencePoint.longitude);
-
-        double lat2 = Math.asin(Math.sin(lat1) * Math.cos(radius / R_earth) +
-                Math.cos(lat1) * Math.sin(radius / R_earth) * Math.cos(brng));
-
-        double lon2 = lon1 + Math.atan2(Math.sin(brng) * Math.sin(radius / R_earth) * Math.cos(lat1),
-                Math.cos(radius / R_earth) - Math.sin(lat1) * Math.sin(lat2));
-
-        lat2 = Math.toDegrees(lat2);
-        lon2 = Math.toDegrees(lon2);
-        LatLng newPoint = new LatLng(lat2, lon2);
-        System.out.println(newPoint);
-        String url = getDirectionsUrl(safePoints.get(safePoints.size() - 1), newPoint);
-        isSafeNavigation = true;
-        DownloadTask downloadTask = new DownloadTask();
-        // Start downloading json data from Google Directions API
-        downloadTask.execute(url);
-        //newPoint = new LatLng(2*oldPoint.latitude- referencePoint.latitude, 2*oldPoint.longitude - referencePoint.longitude);
-        return newPoint;
-    }
-
-    private void generateSafeRoute(List<LatLng> FastestPath) throws IOException {
-        int index = 0;
-        LatLng danger = null;
-        LatLng safe = null;
-        if (FastestPath != null && index < FastestPath.size() && FastestPath.get(index) != destination) {
-            while (index < FastestPath.size() && (FastestPath.get(index) == origin || ((danger = isInsideCircle(FastestPath.get(index), 500)) == null && (safe = isOutsideCircle(FastestPath.get(index), 1000)) == null && FastestPath.get(index) != destination))) {
-                safePoints.add(FastestPath.get(index));
-                index++;
+        List<Map.Entry<Integer, Integer>> list = new LinkedList<Map.Entry<Integer, Integer>>(unsortMap.entrySet());
+        Collections.sort(list, new Comparator<Map.Entry<Integer, Integer>>() {
+            public int compare(Map.Entry<Integer, Integer> o1,
+                               Map.Entry<Integer, Integer> o2) {
+                return (o1.getValue()).compareTo(o2.getValue());
             }
-            if (danger != null) {
-                System.out.println("Size of safe route: " + safePoints.size());
-                LatLng nextPoint = generateNewPoint(FastestPath.get(index), danger, 0.75);
-                System.out.println("Size of safe route: " + safePoints.size());
-//                mMap.addMarker(new MarkerOptions().position(nextPoint));
-//                String request = "https://roads.googleapis.com/v1/snapToRoads?path="+
-//                        String.valueOf(safePoints.get(safePoints.size()-1).latitude)+","+String.valueOf(safePoints.get(safePoints.size()-1).longitude)+
-//                        "|"+String.valueOf(nextPoint.latitude)+","+String.valueOf(nextPoint.longitude)+
-//                        "&interpolate=true&key=AIzaSyB3DXSf4LgyqDhrrEhhqF17pRErfY-0YGk";
-//                String response = downloadUrl(request);
-                System.out.println(danger + " : " + FastestPath.get(index) + " : " + nextPoint);
-                isSafeNavigation = false;
-                String url = getDirectionsUrl(nextPoint, destination);
-                DownloadTask downloadTask = new DownloadTask();
-                // Start downloading json data from Google Directions API
-                downloadTask.execute(url);
-            } else if (safe != null) {
-                System.out.println("Size of safe route: " + safePoints.size());
-//                mMap.addMarker(new MarkerOptions().position(safe));
-                isSafeNavigation = false;
-                String url = getDirectionsUrl(safe, destination);
-                DownloadTask downloadTask = new DownloadTask();
-                // Start downloading json data from Google Directions API
-                downloadTask.execute(url);
-            }
+        });
+
+        Map<Integer, Integer> sortedMap = new LinkedHashMap<Integer, Integer>();
+        for (Map.Entry<Integer, Integer> entry : list) {
+            sortedMap.put(entry.getKey(), entry.getValue());
         }
-        if (FastestPath == null || index >= FastestPath.size()) {
-            PolylineOptions lineOptions = new PolylineOptions();
-            lineOptions.addAll(safePoints);
-            lineOptions.width(10);
-            lineOptions.color(Color.RED);
-            safeRoute = mMap.addPolyline(lineOptions);
-        }
+
+        return sortedMap;
     }
 }
