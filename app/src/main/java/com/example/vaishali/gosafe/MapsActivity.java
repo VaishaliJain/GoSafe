@@ -84,7 +84,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private View placeAutocompleteClearFrom;
     private Marker destinationMarker;
     private Map<String, List<Marker>> newspaperMarkers = new HashMap<>();
-    private boolean[] showNewspaperMarkers = {false, false, false, false, false};
+    private boolean[] showNewspaperMarkers = {false, false, false, false, false, false};
     LatLng currentLocation;
     LatLng destination;
     LatLng origin;
@@ -248,6 +248,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             toggleNewsMarkers(view);
         } else if (view.equals(findViewById(R.id.theft_toggle))) {
             showNewspaperMarkers[4] = !showNewspaperMarkers[4];
+            toggleNewsMarkers(view);
+        } else if (view.equals(findViewById(R.id.camera_toggle))) {
+            showNewspaperMarkers[5] = !showNewspaperMarkers[5];
             toggleNewsMarkers(view);
         } else if (view.equals(findViewById(R.id.choice_toggle))) {
             choice_toggle_value = !choice_toggle_value;
@@ -532,7 +535,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         newspaperMarkers.put("light", lightMarkers);
         newspaperMarkers.put("police", policeMarkers);
         newspaperMarkers.put("theft", theftMarkers);
-        newspaperMarkers.put("camera", theftMarkers);
+        newspaperMarkers.put("camera", cameraMarkers);
     }
 
     private Map<String, List<String>> getIssuesAndAddresses() throws IOException {
@@ -786,7 +789,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 break;
             }
             case R.id.camera_toggle: {
-                if (showNewspaperMarkers[4])
+                if (showNewspaperMarkers[5])
                     for (Marker marker : newspaperMarkers.get("camera"))
                         marker.setVisible(true);
                 else
