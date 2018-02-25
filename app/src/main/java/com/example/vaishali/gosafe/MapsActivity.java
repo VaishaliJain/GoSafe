@@ -205,9 +205,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 fromPlace.setHint("To Location");
                 //view.setBackgroundColor(Color.BLUE);
             } else {
-                autocompleteFragmentFrom.getView().setVisibility(View.GONE);
                 autocompleteFragmentFrom.setText("");
+                autocompleteFragmentFrom.getView().setVisibility(View.GONE);
                 EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
+                autocompleteFragment.setText("");
                 fromPlace.setHint("Search");
                 //view.setBackgroundColor(Color.GREEN);
                 if (navigationRoute != null)
@@ -336,7 +337,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     .position(origin)
                     .icon(getMarkerIcon("#DB7093"))
                     .title("Origin"));
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(origin, 12));
+            LatLngBounds.Builder builder = new LatLngBounds.Builder();
+            builder.include(originMarker.getPosition());
+            builder.include(destinationMarker.getPosition());
+            LatLngBounds bounds = builder.build();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 7));
 
             if (isNavigate && (destination != null)) {
                 navigation(origin, destination);
@@ -414,10 +419,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
         } else {
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
-            builder.include(currentLocation);
+            builder.include(originMarker.getPosition());
             builder.include(location);
             LatLngBounds bounds = builder.build();
-            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 5));
+            mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 7));
         }
     }
 
@@ -556,7 +561,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String str_origin = "origin=" + origin.latitude + "," + origin.longitude;
         String str_dest = "destination=" + dest.latitude + "," + dest.longitude;
         String sensor = "sensor=false";
-        String parameters = str_origin + "&" + str_dest + "&" + sensor;
+        String parameters = str_origin + "&" + str_dest + "&" + sensor + "&alternatives=true";
         String output = "json";
         return ("https://maps.googleapis.com/maps/api/directions/" + output + "?" + parameters);
     }
