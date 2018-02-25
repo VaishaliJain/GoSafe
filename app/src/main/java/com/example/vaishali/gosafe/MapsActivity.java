@@ -76,6 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FloatingActionButton accident_toggle;
     private FloatingActionButton light_toggle;
     private Button navigate_button;
+    FloatingActionButton choice_toggle;
     private boolean choice_toggle_value = false;
     private Marker currentLocationMarker;
     private View placeAutocompleteClear;
@@ -163,7 +164,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             navigate_button.setVisibility(View.GONE);
             navigate_button.setOnClickListener(this);
 
-            FloatingActionButton choice_toggle = findViewById(R.id.choice_toggle);
+            choice_toggle = findViewById(R.id.choice_toggle);
             choice_toggle.setOnClickListener(this);
 
             putCustomMarkers();
@@ -248,12 +249,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else if (view.equals(findViewById(R.id.choice_toggle))) {
             choice_toggle_value = !choice_toggle_value;
             if (choice_toggle_value) {
+                choice_toggle.setImageResource(R.drawable.hide_menu);
                 accident_toggle.setVisibility(View.VISIBLE);
                 harrassment_toggle.setVisibility(View.VISIBLE);
                 light_toggle.setVisibility(View.VISIBLE);
                 theft_toggle.setVisibility(View.VISIBLE);
                 police_toggle.setVisibility(View.VISIBLE);
             } else {
+                choice_toggle.setImageResource(R.drawable.show_menu);
                 accident_toggle.setVisibility(View.GONE);
                 harrassment_toggle.setVisibility(View.GONE);
                 light_toggle.setVisibility(View.GONE);
@@ -481,27 +484,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             for (String address : issuesAndAddresses.get(issue)) {
                 LatLng coordinates = getCoordinatesFromAddress(address);
                 System.out.println("Printing markers " + coordinates.latitude + " : " + coordinates.longitude);
-                Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).title(issue + " markers").visible(false));
+                Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
                 switch (issue) {
                     case "accident":
-                        accidentMarkers.add(marker);
+                        marker.setTitle("Accident");
                         marker.setIcon(getMarkerIcon("#ffaa66cc"));
+                        accidentMarkers.add(marker);
                         break;
                     case "harrassment":
+                        marker.setTitle("Harrassment");
+                        marker.setIcon(getMarkerIcon("#FF4560F2"));
                         harrassmentMarkers.add(marker);
-                        marker.setIcon(getMarkerIcon("#ff00ddff"));
                         break;
                     case "light":
+                        marker.setTitle("No street lights");
+                        marker.setIcon(getMarkerIcon("#FFFF00"));
                         lightMarkers.add(marker);
-                        marker.setIcon(getMarkerIcon("#ffffbb33"));
                         break;
                     case "police":
+                        marker.setTitle("Police present");
+                        marker.setIcon(getMarkerIcon("#ff669900"));
                         policeMarkers.add(marker);
-                        marker.setIcon(getMarkerIcon("#FF4560F2"));
                         break;
                     case "theft":
+                        marker.setTitle("Theft");
+                        marker.setIcon(getMarkerIcon("#8B4513"));
                         theftMarkers.add(marker);
-                        marker.setIcon(getMarkerIcon("#556b2f"));
                         break;
                     default:
                         System.out.println("Invalid issue found");
