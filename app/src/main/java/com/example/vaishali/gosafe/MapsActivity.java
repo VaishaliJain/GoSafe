@@ -62,7 +62,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         GoogleMap.OnMarkerClickListener, View.OnClickListener {
 
     public static final int Police_Weight = 3;
-    public static final int Light_Weight = 1;
+    public static final int Light_Weight = 2;
     public static final int Accident_Weight = 2;
     public static final int Robbery_Weight = 1;
     public static final int Harassment_Weight = 3;
@@ -75,7 +75,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FloatingActionButton theft_toggle;
     private FloatingActionButton accident_toggle;
     private FloatingActionButton light_toggle;
-    private Button navigate_button;
     FloatingActionButton choice_toggle;
     private boolean choice_toggle_value = false;
     private Marker currentLocationMarker;
@@ -94,7 +93,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Polyline safeRoute;
     private Marker reviewMarker;
     private Marker originMarker;
-    List<LatLng> safePoints = new ArrayList<>();
     public static final int LOCATION_UPDATE_MIN_DISTANCE = 10;
     public static final int LOCATION_UPDATE_MIN_TIME = 5000;
     private static final int INITIAL_REQUEST = 1337;
@@ -160,7 +158,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             light_toggle = findViewById(R.id.light_toggle);
             light_toggle.setOnClickListener(this);
 
-            navigate_button = findViewById(R.id.navigate_button);
+            Button navigate_button = findViewById(R.id.navigate_button);
             navigate_button.setVisibility(View.GONE);
             navigate_button.setOnClickListener(this);
 
@@ -558,8 +556,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void navigation(LatLng origin, LatLng dest) {
-        if (!safePoints.isEmpty())
-            safePoints = new ArrayList<>();
+//        if (!safePoints.isEmpty())
+//            safePoints = new ArrayList<>();
         String url = getDirectionsUrl(origin, dest);
         DownloadTask downloadTask = new DownloadTask();
         // Start downloading json data from Google Directions API
@@ -666,16 +664,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Executes in UI thread, after the parsing process
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-            ArrayList<LatLng> points = null;
-            PolylineOptions lineOptions = null;
+            ArrayList<LatLng> safePoints = new ArrayList<>();
+            PolylineOptions lineOptions = new PolylineOptions();
+            PolylineOptions safeOptions = new PolylineOptions();
             HashMap<Integer, Integer> route_dangerLevel = new HashMap<>();
-
             // Traversing through all the routes
             for (int i = 0; i < result.size(); i++) {
                 Log.d("Route: ", result.get(i).toString());
-                points = new ArrayList<>();
-                lineOptions = new PolylineOptions();
-
+                ArrayList<LatLng> points = new ArrayList<>();
                 // Fetching i-th route
                 int danger_count = 0;
                 int safety_count = 0;
@@ -689,10 +685,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     LatLng position = new LatLng(lat, lng);
 
                     points.add(position);
-                    if (isInsideCircle(position, 500) != 0)
-                        danger_count++;
-                    if (isOutsideCircle(position, 1000) != 0)
-                        safety_count++;
+                    danger_count += isInsideCircle(position, 500);
+                    safety_count += isOutsideCircle(position, 1000);
+
                 }
 
                 //Best Path returned by Google Map API
@@ -702,18 +697,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     lineOptions.color(Color.parseColor("#4a80f5"));
 
                     // Drawing polyline in the Google Map for the 0th route
-                    if (lineOptions.getPoints().size() > 0 && navigationRoute == null)
+                    if (lineOptions.getPoints().size() > 0)
                         navigationRoute = mMap.addPolyline(lineOptions);
                 }
-
-                route_dangerLevel.put(i, danger_count - safety_count);
+                route_dangerLevel.put(i, safety_count - danger_count);
             }
 
             //Get the Safest Route
             Map<Integer, Integer> sortedMap = sortByValue(route_dangerLevel);
-            Map.Entry<Integer, Integer> entry = sortedMap.entrySet().iterator().next();
-
-            List<HashMap<String, String>> path_route = result.get(entry.getKey());
+            Integer route_number = (Integer) sortedMap.keySet().toArray()[0];
+            List<HashMap<String, String>> path_route = result.get(route_number);
             for (int j = 0; j < path_route.size(); j++) {
                 HashMap<String, String> point = path_route.get(j);
                 double lat = Double.parseDouble(point.get("lat"));
@@ -722,14 +715,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 safePoints.add(position);
             }
-
-            PolylineOptions option = new PolylineOptions();
-            option.addAll(safePoints);
-            option.width(10);
-            option.color(Color.GREEN);
-
-            if (option.getPoints().size() > 0 && safeRoute == null)
-                safeRoute = mMap.addPolyline(option);
+            safeOptions.addAll(safePoints);
+            safeOptions.width(10);
+            safeOptions.color(Color.GREEN);
+            if (safeOptions.getPoints().size() > 0 && safeRoute == null)
+                safeRoute = mMap.addPolyline(safeOptions);
         }
     }
 
@@ -786,13 +776,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private int isInsideCircle(LatLng queryPoint, double radius) {
-        int accidents = 0, theft = 0, harassment = 0;
+        int accidents = 0, theft = 0, harassment = 0, light = 0;
 
         for (int i = 0; i < newspaperMarkers.get("accident").size(); i++) {
             LatLng center = newspaperMarkers.get("accident").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            //System.out.println(results[0]);
             if (results[0] <= radius)
                 accidents++;
         }
@@ -800,7 +789,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng center = newspaperMarkers.get("theft").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            //System.out.println(results[0]);
             if (results[0] <= radius)
                 theft++;
         }
@@ -811,13 +799,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (results[0] <= radius)
                 harassment++;
         }
-
-        return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight);
+        for (int i = 0; i < newspaperMarkers.get("light").size(); i++) {
+            LatLng center = newspaperMarkers.get("light").get(i).getPosition();
+            float[] results = new float[1];
+            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
+            if (results[0] < radius)
+                light++;
+        }
+        return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight + light*Light_Weight);
     }
 
     private int isOutsideCircle(LatLng queryPoint, double radius) {
 
-        int police = 0, light = 0;
+        int police = 0;
 
         for (int i = 0; i < newspaperMarkers.get("police").size(); i++) {
             LatLng center = newspaperMarkers.get("police").get(i).getPosition();
@@ -826,15 +820,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (results[0] < radius)
                 police++;
         }
-        for (int i = 0; i < newspaperMarkers.get("light").size(); i++) {
-            LatLng center = newspaperMarkers.get("light").get(i).getPosition();
-            float[] results = new float[1];
-            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            if (results[0] < radius)
-                light++;
-        }
 
-        return (police * Police_Weight + light * Light_Weight);
+
+        return (police * Police_Weight);
     }
 
     private static Map<Integer, Integer> sortByValue(Map<Integer, Integer> unsortMap) {

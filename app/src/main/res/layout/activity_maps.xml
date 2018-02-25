@@ -124,7 +124,7 @@
                 android:layout_marginBottom="13dp"
                 android:clickable="true"
                 android:visibility="gone"
-                app:backgroundTint="#8B4513"
+                app:backgroundTint="#F4A460	"
                 app:srcCompat="@drawable/theft" />
 
         </RelativeLayout>
