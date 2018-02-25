@@ -62,6 +62,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         GoogleMap.OnMarkerClickListener, View.OnClickListener {
 
     public static final int Police_Weight = 3;
+    public static final int Camera_Weight = 2;
     public static final int Light_Weight = 2;
     public static final int Accident_Weight = 2;
     public static final int Robbery_Weight = 1;
@@ -75,6 +76,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FloatingActionButton theft_toggle;
     private FloatingActionButton accident_toggle;
     private FloatingActionButton light_toggle;
+    private FloatingActionButton camera_toggle;
     FloatingActionButton choice_toggle;
     private boolean choice_toggle_value = false;
     private Marker currentLocationMarker;
@@ -157,6 +159,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             light_toggle = findViewById(R.id.light_toggle);
             light_toggle.setOnClickListener(this);
+
+            camera_toggle = findViewById(R.id.camera_toggle);
+            camera_toggle.setOnClickListener(this);
 
             Button navigate_button = findViewById(R.id.navigate_button);
             navigate_button.setVisibility(View.GONE);
@@ -253,6 +258,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 light_toggle.setVisibility(View.VISIBLE);
                 theft_toggle.setVisibility(View.VISIBLE);
                 police_toggle.setVisibility(View.VISIBLE);
+                camera_toggle.setVisibility(View.VISIBLE);
             } else {
                 choice_toggle.setImageResource(R.drawable.show_menu);
                 accident_toggle.setVisibility(View.GONE);
@@ -260,6 +266,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 light_toggle.setVisibility(View.GONE);
                 theft_toggle.setVisibility(View.GONE);
                 police_toggle.setVisibility(View.GONE);
+                camera_toggle.setVisibility(View.GONE);
             }
         }
     }
@@ -478,6 +485,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         List<Marker> lightMarkers = new ArrayList<>();
         List<Marker> policeMarkers = new ArrayList<>();
         List<Marker> theftMarkers = new ArrayList<>();
+        List<Marker> cameraMarkers = new ArrayList<>();
         for (String issue : issuesAndAddresses.keySet()) {
             for (String address : issuesAndAddresses.get(issue)) {
                 LatLng coordinates = getCoordinatesFromAddress(address);
@@ -509,6 +517,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         marker.setIcon(getMarkerIcon("#8B4513"));
                         theftMarkers.add(marker);
                         break;
+                    case "camera":
+                        marker.setTitle("Camera");
+                        marker.setIcon(getMarkerIcon("#C0C0C0"));
+                        cameraMarkers.add(marker);
+                        break;
                     default:
                         System.out.println("Invalid issue found");
                 }
@@ -519,6 +532,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         newspaperMarkers.put("light", lightMarkers);
         newspaperMarkers.put("police", policeMarkers);
         newspaperMarkers.put("theft", theftMarkers);
+        newspaperMarkers.put("camera", theftMarkers);
     }
 
     private Map<String, List<String>> getIssuesAndAddresses() throws IOException {
@@ -529,6 +543,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         resourceIdToIssue.put(R.raw.harrassment, "harrassment");
         resourceIdToIssue.put(R.raw.theft, "theft");
         resourceIdToIssue.put(R.raw.light, "light");
+        resourceIdToIssue.put(R.raw.camera, "camera");
         Resources r = getResources();
         for (int id : resourceIdToIssue.keySet()) {
             InputStream in = r.openRawResource(id);
@@ -770,6 +785,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         marker.setVisible(false);
                 break;
             }
+            case R.id.camera_toggle: {
+                if (showNewspaperMarkers[4])
+                    for (Marker marker : newspaperMarkers.get("camera"))
+                        marker.setVisible(true);
+                else
+                    for (Marker marker : newspaperMarkers.get("camera"))
+                        marker.setVisible(false);
+                break;
+            }
             default:
                 System.out.println("Incorrect id calls toggle markers");
         }
@@ -811,7 +835,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private int isOutsideCircle(LatLng queryPoint, double radius) {
 
-        int police = 0;
+        int police = 0, camera = 0;
 
         for (int i = 0; i < newspaperMarkers.get("police").size(); i++) {
             LatLng center = newspaperMarkers.get("police").get(i).getPosition();
@@ -821,8 +845,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 police++;
         }
 
+        for (int i = 0; i < newspaperMarkers.get("camera").size(); i++) {
+            LatLng center = newspaperMarkers.get("camera").get(i).getPosition();
+            float[] results = new float[1];
+            Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
+            if (results[0] < radius)
+                camera++;
+        }
 
-        return (police * Police_Weight);
+        return (police * Police_Weight + camera * Camera_Weight);
     }
 
     private static Map<Integer, Integer> sortByValue(Map<Integer, Integer> unsortMap) {
