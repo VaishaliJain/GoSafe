@@ -205,7 +205,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             isNavigate = !isNavigate;
             if (isNavigate) {
                 autocompleteFragmentFrom.getView().setVisibility(View.VISIBLE);
-                Button navigation = (Button)findViewById(R.id.navigate_button);
+                Button navigation = (Button) findViewById(R.id.navigate_button);
                 navigation.setText("Exit Navigation");
                 EditText fromPlace = autocompleteFragment.getView().findViewById(R.id.place_autocomplete_search_input);
                 fromPlace.setHint("To Location");
@@ -330,8 +330,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             address = geocoder
                     .getFromLocation(latLng.latitude, latLng.longitude, 1)
                     .get(0).getAddressLine(0);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         return address;
@@ -342,9 +341,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         public void onPlaceSelected(Place place) {
             origin = place.getLatLng();
             originMarker = mMap.addMarker(new MarkerOptions()
-                                .position(origin)
-                                .icon(getMarkerIcon("#DB7093"))
-                                .title("Origin"));
+                    .position(origin)
+                    .icon(getMarkerIcon("#DB7093"))
+                    .title("Origin"));
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             builder.include(originMarker.getPosition());
             builder.include(destinationMarker.getPosition());
@@ -396,9 +395,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     currentLocationMarker.setPosition(currentLocation);
                 else
                     currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                                                .position(currentLocation)
-                                                .title("Current Position")
-                                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
+                            .position(currentLocation)
+                            .title("Current Position")
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 mLocationManager.removeUpdates(mLocationListener);
             }
@@ -419,10 +418,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void drawMarkerAtDestination(LatLng location) {
         destinationMarker = mMap.addMarker(new MarkerOptions()
-                                .position(location)
-                                .title("Destination")
-                                .icon(getMarkerIcon("#DB7093"))
-                                .draggable(true));
+                .position(location)
+                .title("Destination")
+                .icon(getMarkerIcon("#DB7093"))
+                .draggable(true));
         if (!isNavigate) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
         } else {
@@ -442,12 +441,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if ((isGPSEnabled || isNetworkEnabled)) {
             if (isNetworkEnabled) {
                 if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
                     return;
                 }
                 mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
@@ -464,9 +457,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         if (location != null) {
             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
             currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                                        .position(currentLocation)
-                                        .title("Current Position")
-                                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
+                    .position(currentLocation)
+                    .title("Current Position")
+                    .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
         }
     }
@@ -665,40 +658,37 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Executes in UI thread, after the parsing process
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
-            ArrayList<LatLng> points                    = null;
-            PolylineOptions lineOptions                 = null;
-            HashMap<Integer, Integer> route_dangerLevel = new HashMap<Integer, Integer>();
+            ArrayList<LatLng> points = null;
+            PolylineOptions lineOptions = null;
+            HashMap<Integer, Integer> route_dangerLevel = new HashMap<>();
 
             // Traversing through all the routes
-            for (int i = 0; i < result.size(); i++)
-            {
+            for (int i = 0; i < result.size(); i++) {
                 Log.d("Route: ", result.get(i).toString());
-                points            = new ArrayList<LatLng>();
-                lineOptions       = new PolylineOptions();
+                points = new ArrayList<>();
+                lineOptions = new PolylineOptions();
 
                 // Fetching i-th route
-                int danger_count  = 0;
-                int safety_count  = 0;
+                int danger_count = 0;
+                int safety_count = 0;
                 List<HashMap<String, String>> path = result.get(i);
 
                 // Fetching all the points in i-th route
-                for (int j = 0; j < path.size(); j++)
-                {
+                for (int j = 0; j < path.size(); j++) {
                     HashMap<String, String> point = path.get(j);
                     double lat = Double.parseDouble(point.get("lat"));
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
 
                     points.add(position);
-                    if(isInsideCircle(position, 500) != 0)
+                    if (isInsideCircle(position, 500) != 0)
                         danger_count++;
-                    if(isOutsideCircle(position, 1000) != 0)
+                    if (isOutsideCircle(position, 1000) != 0)
                         safety_count++;
                 }
 
                 //Best Path returned by Google Map API
-                if(i == 0)
-                {
+                if (i == 0) {
                     lineOptions.addAll(points);
                     lineOptions.width(20);
                     lineOptions.color(Color.parseColor("#4a80f5"));
@@ -708,20 +698,19 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         navigationRoute = mMap.addPolyline(lineOptions);
                 }
 
-                route_dangerLevel.put(i, danger_count-safety_count);
+                route_dangerLevel.put(i, danger_count - safety_count);
             }
 
             //Get the Safest Route
             Map<Integer, Integer> sortedMap = sortByValue(route_dangerLevel);
-            Map.Entry<Integer,Integer> entry = sortedMap.entrySet().iterator().next();
+            Map.Entry<Integer, Integer> entry = sortedMap.entrySet().iterator().next();
 
             List<HashMap<String, String>> path_route = result.get(entry.getKey());
-            for (int j = 0; j < path_route.size(); j++)
-            {
+            for (int j = 0; j < path_route.size(); j++) {
                 HashMap<String, String> point = path_route.get(j);
-                double lat                    = Double.parseDouble(point.get("lat"));
-                double lng                    = Double.parseDouble(point.get("lng"));
-                LatLng position               = new LatLng(lat, lng);
+                double lat = Double.parseDouble(point.get("lat"));
+                double lng = Double.parseDouble(point.get("lng"));
+                LatLng position = new LatLng(lat, lng);
 
                 safePoints.add(position);
             }
@@ -788,12 +777,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private int isInsideCircle(LatLng queryPoint, double radius)
-    {
+    private int isInsideCircle(LatLng queryPoint, double radius) {
         int accidents = 0, theft = 0, harassment = 0;
 
-        for (int i = 0; i < newspaperMarkers.get("accident").size(); i++)
-        {
+        for (int i = 0; i < newspaperMarkers.get("accident").size(); i++) {
             LatLng center = newspaperMarkers.get("accident").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
@@ -813,12 +800,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng center = newspaperMarkers.get("harrassment").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            //System.out.println(results[0]);
             if (results[0] <= radius)
                 harassment++;
         }
 
-        return (accidents * Accident_Weight  + theft * Robbery_Weight + harassment * Harassment_Weight);
+        return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight);
     }
 
     private int isOutsideCircle(LatLng queryPoint, double radius) {
@@ -829,7 +815,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng center = newspaperMarkers.get("police").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            //System.out.println(results[0]);
             if (results[0] < radius)
                 police++;
         }
@@ -837,7 +822,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             LatLng center = newspaperMarkers.get("light").get(i).getPosition();
             float[] results = new float[1];
             Location.distanceBetween(center.latitude, center.longitude, queryPoint.latitude, queryPoint.longitude, results);
-            //System.out.println(results[0]);
             if (results[0] < radius)
                 light++;
         }
@@ -847,7 +831,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private static Map<Integer, Integer> sortByValue(Map<Integer, Integer> unsortMap) {
 
-        List<Map.Entry<Integer, Integer>> list = new LinkedList<Map.Entry<Integer, Integer>>(unsortMap.entrySet());
+        List<Map.Entry<Integer, Integer>> list = new LinkedList<>(unsortMap.entrySet());
         Collections.sort(list, new Comparator<Map.Entry<Integer, Integer>>() {
             public int compare(Map.Entry<Integer, Integer> o1,
                                Map.Entry<Integer, Integer> o2) {
@@ -855,7 +839,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        Map<Integer, Integer> sortedMap = new LinkedHashMap<Integer, Integer>();
+        Map<Integer, Integer> sortedMap = new LinkedHashMap<>();
         for (Map.Entry<Integer, Integer> entry : list) {
             sortedMap.put(entry.getKey(), entry.getValue());
         }
