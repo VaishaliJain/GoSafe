@@ -13,8 +13,8 @@ public class UserFormActivity extends AppCompatActivity implements View.OnClickL
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.userform);
-        Button submitReviewButton = (Button) findViewById(R.id.submit);
-        Button cancelReviewButton = (Button) findViewById(R.id.cancel);
+        Button submitReviewButton = findViewById(R.id.submit);
+        Button cancelReviewButton = findViewById(R.id.cancel);
         submitReviewButton.setOnClickListener(this);
         cancelReviewButton.setOnClickListener(this);
     }

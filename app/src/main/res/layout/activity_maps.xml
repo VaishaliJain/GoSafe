@@ -102,7 +102,7 @@
                 app:srcCompat="@drawable/light" />
 
             <android.support.design.widget.FloatingActionButton
-                android:id="@+id/police_toggle"
+                android:id="@+id/theft_toggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/light_toggle"
@@ -111,29 +111,29 @@
                 android:layout_marginBottom="13dp"
                 android:clickable="true"
                 android:visibility="gone"
-                app:backgroundTint="@android:color/holo_green_dark"
-                app:srcCompat="@drawable/police" />
-
-            <android.support.design.widget.FloatingActionButton
-                android:id="@+id/theft_toggle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_above="@+id/police_toggle"
-                android:layout_alignLeft="@+id/police_toggle"
-                android:layout_alignStart="@+id/police_toggle"
-                android:layout_marginBottom="13dp"
-                android:clickable="true"
-                android:visibility="gone"
                 app:backgroundTint="#F4A460"
                 app:srcCompat="@drawable/theft" />
 
             <android.support.design.widget.FloatingActionButton
-                android:id="@+id/camera_toggle"
+                android:id="@+id/police_toggle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_above="@+id/theft_toggle"
                 android:layout_alignLeft="@+id/theft_toggle"
                 android:layout_alignStart="@+id/theft_toggle"
+                android:layout_marginBottom="13dp"
+                android:clickable="true"
+                android:visibility="gone"
+                app:backgroundTint="@android:color/holo_green_dark"
+                app:srcCompat="@drawable/police" />
+
+            <android.support.design.widget.FloatingActionButton
+                android:id="@+id/camera_toggle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_above="@+id/police_toggle"
+                android:layout_alignLeft="@+id/police_toggle"
+                android:layout_alignStart="@+id/police_toggle"
                 android:layout_marginBottom="13dp"
                 android:clickable="true"
                 android:visibility="gone"
