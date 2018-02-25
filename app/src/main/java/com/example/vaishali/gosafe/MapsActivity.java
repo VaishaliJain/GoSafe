@@ -519,7 +519,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         break;
                     case "camera":
                         marker.setTitle("Camera");
-                        marker.setIcon(getMarkerIcon("#C0C0C0"));
+                        marker.setIcon(getMarkerIcon("#ff00ddff"));
                         cameraMarkers.add(marker);
                         break;
                     default:

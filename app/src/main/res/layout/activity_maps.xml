@@ -137,7 +137,7 @@
                 android:layout_marginBottom="13dp"
                 android:clickable="true"
                 android:visibility="gone"
-                app:backgroundTint="#C0C0C0"
+                app:backgroundTint="#ff00ddff"
                 app:srcCompat="@drawable/camera" />
 
         </RelativeLayout>
