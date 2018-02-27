@@ -63,10 +63,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     public static final int Police_Weight = 3;
     public static final int Camera_Weight = 2;
-    public static final int Light_Weight = 2;
-    public static final int Accident_Weight = 2;
-    public static final int Robbery_Weight = 1;
-    public static final int Harassment_Weight = 3;
+    public static final int Light_Weight = 1;
+    public static final int Accident_Weight = 4;
+    public static final int Robbery_Weight = 2;
+    public static final int Harassment_Weight = 6;
 
 
     private GoogleMap mMap;
@@ -703,8 +703,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     LatLng position = new LatLng(lat, lng);
 
                     points.add(position);
-                    danger_count += isInsideCircle(position, 500);
-                    safety_count += isOutsideCircle(position, 1000);
+                    danger_count += getRouteDangerLevel(position, 1000);
+                    safety_count += getRouteSafetyLevel(position, 500);
 
                 }
 
@@ -718,11 +718,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (lineOptions.getPoints().size() > 0)
                         navigationRoute = mMap.addPolyline(lineOptions);
                 }
-                route_dangerLevel.put(i, safety_count - danger_count);
+                route_dangerLevel.put(i, danger_count - safety_count);
             }
 
             //Get the Safest Route
             Map<Integer, Integer> sortedMap = sortByValue(route_dangerLevel);
+            //Route element on top will have higher safety value / lower danger value
             Integer route_number = (Integer) sortedMap.keySet().toArray()[0];
             List<HashMap<String, String>> path_route = result.get(route_number);
             for (int j = 0; j < path_route.size(); j++) {
@@ -802,7 +803,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private int isInsideCircle(LatLng queryPoint, double radius) {
+    private int getRouteDangerLevel(LatLng queryPoint, double radius) {
         int accidents = 0, theft = 0, harassment = 0, light = 0;
 
         for (int i = 0; i < newspaperMarkers.get("accident").size(); i++) {
@@ -836,7 +837,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight + light*Light_Weight);
     }
 
-    private int isOutsideCircle(LatLng queryPoint, double radius) {
+    private int getRouteSafetyLevel(LatLng queryPoint, double radius) {
 
         int police = 0, camera = 0;
 
