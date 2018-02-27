@@ -351,6 +351,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         public void onPlaceSelected(Place place) {
             origin = place.getLatLng();
+            if (originMarker != null)
+                originMarker.remove();
+            if (navigationRoute != null)
+                navigationRoute.remove();
+            navigationRoute = null;
             originMarker = mMap.addMarker(new MarkerOptions()
                     .position(origin)
                     .icon(getMarkerIcon("#DB7093"))
@@ -375,6 +380,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private PlaceSelectionListener placeSelectionListener = new PlaceSelectionListener() {
         @Override
         public void onPlaceSelected(Place place) {
+            if (destinationMarker != null)
+                destinationMarker.remove();
+            if (navigationRoute != null)
+                navigationRoute.remove();
+            navigationRoute = null;
             destination = place.getLatLng();
             if (isNavigate) {
                 if (origin == null)
@@ -834,7 +844,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (results[0] < radius)
                 light++;
         }
-        return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight + light*Light_Weight);
+        return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight + light * Light_Weight);
     }
 
     private int getRouteSafetyLevel(LatLng queryPoint, double radius) {
