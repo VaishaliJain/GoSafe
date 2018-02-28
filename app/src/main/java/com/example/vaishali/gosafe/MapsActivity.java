@@ -692,6 +692,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         // Executes in UI thread, after the parsing process
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
+
+            if(result == null)
+                return;
+
             ArrayList<LatLng> safePoints = new ArrayList<>();
             PolylineOptions lineOptions = new PolylineOptions();
             PolylineOptions safeOptions = new PolylineOptions();
@@ -717,6 +721,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     safety_count += getRouteSafetyLevel(position, 500);
 
                 }
+                Log.d("R"+i, " danger:"+danger_count);
+                Log.d("R"+i, " safety:"+safety_count);
 
                 //Best Path returned by Google Map API
                 if (i == 0) {
@@ -733,6 +739,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             //Get the Safest Route
             Map<Integer, Integer> sortedMap = sortByValue(route_dangerLevel);
+
+            for (Map.Entry<Integer, Integer> entry : sortedMap.entrySet())
+                Log.d("Key = " + entry.getKey(),", Value = "+ entry.getValue());
+
             //Route element on top will have higher safety value / lower danger value
             Integer route_number = (Integer) sortedMap.keySet().toArray()[0];
             List<HashMap<String, String>> path_route = result.get(route_number);
@@ -814,6 +824,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private int getRouteDangerLevel(LatLng queryPoint, double radius) {
+
+        if(newspaperMarkers == null)
+            return Integer.MAX_VALUE;
+
         int accidents = 0, theft = 0, harassment = 0, light = 0;
 
         for (int i = 0; i < newspaperMarkers.get("accident").size(); i++) {
@@ -844,11 +858,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (results[0] < radius)
                 light++;
         }
+        if((accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight + light * Light_Weight) != 0)
+            Log.d("A:T:H:L", accidents+":"+theft+":"+harassment+":"+light);
         return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight + light * Light_Weight);
     }
 
     private int getRouteSafetyLevel(LatLng queryPoint, double radius) {
 
+        if(newspaperMarkers == null)
+            return Integer.MIN_VALUE;
         int police = 0, camera = 0;
 
         for (int i = 0; i < newspaperMarkers.get("police").size(); i++) {
