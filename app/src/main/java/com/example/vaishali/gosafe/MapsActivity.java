@@ -764,6 +764,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void toggleNewsMarkers(View view) {
+
+        if(newspaperMarkers == null)
+            return;
+        
         switch (view.getId()) {
             case R.id.accident_toggle: {
                 if (showNewspaperMarkers[0])
