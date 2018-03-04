@@ -171,7 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             choice_toggle.setOnClickListener(this);
 
             putCustomMarkers();
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -357,9 +357,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 navigationRoute.remove();
             navigationRoute = null;
             originMarker = mMap.addMarker(new MarkerOptions()
-                    .position(origin)
-                    .icon(getMarkerIcon("#DB7093"))
-                    .title("Origin"));
+                                .position(origin)
+                                .icon(getMarkerIcon("#DB7093"))
+                                .title("Origin"));
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             builder.include(originMarker.getPosition());
             builder.include(destinationMarker.getPosition());
@@ -416,9 +416,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     currentLocationMarker.setPosition(currentLocation);
                 else
                     currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                            .position(currentLocation)
-                            .title("Current Position")
-                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
+                                                .position(currentLocation)
+                                                .title("You are here")
+                                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 mLocationManager.removeUpdates(mLocationListener);
             }
@@ -439,10 +439,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void drawMarkerAtDestination(LatLng location) {
         destinationMarker = mMap.addMarker(new MarkerOptions()
-                .position(location)
-                .title("Destination")
-                .icon(getMarkerIcon("#DB7093"))
-                .draggable(true));
+                                .position(location)
+                                .title("Destination")
+                                .icon(getMarkerIcon("#DB7093"))
+                                .draggable(true));
         if (!isNavigate) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
         } else {
@@ -459,22 +459,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         boolean isNetworkEnabled = mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
 
         Location location = null;
-        if ((isGPSEnabled || isNetworkEnabled)) {
-            if (isNetworkEnabled) {
-                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                    return;
-                }
-                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
-                        LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, mLocationListener);
-                location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
 
-            if (isGPSEnabled) {
-                mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
-                        LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, mLocationListener);
-                location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if (isNetworkEnabled) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
             }
+            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
+                    LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, mLocationListener);
+            location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
         }
+        else
+            Toast.makeText(getApplicationContext(),"Please turn ON your Internet and Restart app.",Toast.LENGTH_SHORT).show();
+
+        if (isGPSEnabled) {
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                    LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, mLocationListener);
+            location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        }
+        else
+            Toast.makeText(getApplicationContext(),"Please turn ON your Location and Restart app.",Toast.LENGTH_SHORT).show();
+
         if (location != null) {
             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
             currentLocationMarker = mMap.addMarker(new MarkerOptions()
