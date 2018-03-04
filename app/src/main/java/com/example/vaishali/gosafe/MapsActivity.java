@@ -830,7 +830,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private int getRouteDangerLevel(LatLng queryPoint, double radius) {
 
-        if(newspaperMarkers == null)
+        if(newspaperMarkers == null || !newspaperMarkers.containsKey("accident") || !newspaperMarkers.containsKey("theft")
+                                 || !newspaperMarkers.containsKey("harrassment") || !newspaperMarkers.containsKey("light"))
             return Integer.MAX_VALUE;
 
         int accidents = 0, theft = 0, harassment = 0, light = 0;
@@ -869,7 +870,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private int getRouteSafetyLevel(LatLng queryPoint, double radius) {
 
-        if(newspaperMarkers == null)
+        if(newspaperMarkers == null || !newspaperMarkers.containsKey("police") || !newspaperMarkers.containsKey("camera"))
             return Integer.MIN_VALUE;
         int police = 0, camera = 0;
 
