@@ -491,65 +491,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return BitmapDescriptorFactory.defaultMarker(hsv[0]);
     }
 
-    private void putCustomMarkers() throws IOException {
-        Map<String, List<String>> issuesAndAddresses = getIssuesAndAddresses();
-        List<Marker> accidentMarkers = new ArrayList<>();
-        List<Marker> harrassmentMarkers = new ArrayList<>();
-        List<Marker> lightMarkers = new ArrayList<>();
-        List<Marker> policeMarkers = new ArrayList<>();
-        List<Marker> theftMarkers = new ArrayList<>();
-        List<Marker> cameraMarkers = new ArrayList<>();
-        for (String issue : issuesAndAddresses.keySet()) {
-            for (String address : issuesAndAddresses.get(issue)) {
-                LatLng coordinates = getCoordinatesFromAddress(address);
-                System.out.println("Printing markers " + coordinates.latitude + " : " + coordinates.longitude);
-                Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
-                switch (issue) {
-                    case "accident":
-                        marker.setTitle("Accident");
-                        marker.setIcon(getMarkerIcon("#ffaa66cc"));
-                        accidentMarkers.add(marker);
-                        break;
-                    case "harrassment":
-                        marker.setTitle("Harrassment");
-                        marker.setIcon(getMarkerIcon("#FF4560F2"));
-                        harrassmentMarkers.add(marker);
-                        break;
-                    case "light":
-                        marker.setTitle("No street lights");
-                        marker.setIcon(getMarkerIcon("#FFFF00"));
-                        lightMarkers.add(marker);
-                        break;
-                    case "police":
-                        marker.setTitle("Police present");
-                        marker.setIcon(getMarkerIcon("#ff669900"));
-                        policeMarkers.add(marker);
-                        break;
-                    case "theft":
-                        marker.setTitle("Theft");
-                        marker.setIcon(getMarkerIcon("#8B4513"));
-                        theftMarkers.add(marker);
-                        break;
-                    case "camera":
-                        marker.setTitle("Camera");
-                        marker.setIcon(getMarkerIcon("#ff00ddff"));
-                        cameraMarkers.add(marker);
-                        break;
-                    default:
-                        System.out.println("Invalid issue found");
-                }
-            }
-        }
-        newspaperMarkers.put("accident", accidentMarkers);
-        newspaperMarkers.put("harrassment", harrassmentMarkers);
-        newspaperMarkers.put("light", lightMarkers);
-        newspaperMarkers.put("police", policeMarkers);
-        newspaperMarkers.put("theft", theftMarkers);
-        newspaperMarkers.put("camera", cameraMarkers);
-    }
-
-    private Map<String, List<String>> getIssuesAndAddresses() throws IOException {
-        Map<String, List<String>> result = new HashMap<>();
+    private void putCustomMarkers() throws IOException
+    {
         Map<Integer, String> resourceIdToIssue = new HashMap<>();
         resourceIdToIssue.put(R.raw.accident, "accident");
         resourceIdToIssue.put(R.raw.police, "police");
@@ -557,18 +500,60 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         resourceIdToIssue.put(R.raw.theft, "theft");
         resourceIdToIssue.put(R.raw.light, "light");
         resourceIdToIssue.put(R.raw.camera, "camera");
+
         Resources r = getResources();
-        for (int id : resourceIdToIssue.keySet()) {
+
+        for (int id : resourceIdToIssue.keySet())
+        {
             InputStream in = r.openRawResource(id);
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
-            List<String> addressList = new ArrayList<>();
             String line;
-            while ((line = reader.readLine()) != null) {
-                addressList.add(line);
+            List<Marker> issueMarkers = new ArrayList<>();
+
+            while ((line = reader.readLine()) != null)
+            {
+                LatLng coordinates = getCoordinatesFromAddress(line);
+                Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
+
+                switch (id)
+                {
+                    case R.raw.accident:
+                        marker.setTitle("Accident");
+                        marker.setIcon(getMarkerIcon("#ffaa66cc"));
+                        issueMarkers.add(marker);
+                        break;
+                    case R.raw.harrassment:
+                        marker.setTitle("Harrassment");
+                        marker.setIcon(getMarkerIcon("#FF4560F2"));
+                        issueMarkers.add(marker);
+                        break;
+                    case R.raw.light:
+                        marker.setTitle("No street lights");
+                        marker.setIcon(getMarkerIcon("#FFFF00"));
+                        issueMarkers.add(marker);
+                        break;
+                    case R.raw.police:
+                        marker.setTitle("Police present");
+                        marker.setIcon(getMarkerIcon("#ff669900"));
+                        issueMarkers.add(marker);
+                        break;
+                    case R.raw.theft:
+                        marker.setTitle("Theft");
+                        marker.setIcon(getMarkerIcon("#8B4513"));
+                        issueMarkers.add(marker);
+                        break;
+                    case R.raw.camera:
+                        marker.setTitle("Camera");
+                        marker.setIcon(getMarkerIcon("#ff00ddff"));
+                        issueMarkers.add(marker);
+                        break;
+                    default:
+                        System.out.println("Invalid issue found");
+                }
             }
-            result.put(resourceIdToIssue.get(id), addressList);
+            newspaperMarkers.put(resourceIdToIssue.get(id), issueMarkers);
+            issueMarkers = null;
         }
-        return result;
     }
 
     private LatLng getCoordinatesFromAddress(String address) throws IOException {
@@ -701,12 +686,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             PolylineOptions safeOptions = new PolylineOptions();
             HashMap<Integer, Integer> route_dangerLevel = new HashMap<>();
             // Traversing through all the routes
-            for (int i = 0; i < result.size(); i++) {
-                Log.d("Route: ", result.get(i).toString());
+            for (int i = 0; i < result.size(); i++)
+            {
                 ArrayList<LatLng> points = new ArrayList<>();
-                // Fetching i-th route
-                int danger_count = 0;
-                int safety_count = 0;
+                int danger_count = 0, safety_count = 0;
                 List<HashMap<String, String>> path = result.get(i);
 
                 // Fetching all the points in i-th route
@@ -716,13 +699,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     double lng = Double.parseDouble(point.get("lng"));
                     LatLng position = new LatLng(lat, lng);
 
-                    points.add(position);
                     danger_count += getRouteDangerLevel(position, 1000);
                     safety_count += getRouteSafetyLevel(position, 500);
 
+                    if(i==0)
+                        points.add(position);
                 }
-                Log.d("R"+i, " danger:"+danger_count);
-                Log.d("R"+i, " safety:"+safety_count);
+                route_dangerLevel.put(i, danger_count - safety_count);
 
                 //Best Path returned by Google Map API
                 if (i == 0) {
@@ -734,8 +717,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (lineOptions.getPoints().size() > 0)
                         navigationRoute = mMap.addPolyline(lineOptions);
                 }
-                route_dangerLevel.put(i, danger_count - safety_count);
             }
+
+            if(route_dangerLevel == null)
+                return;
 
             //Get the Safest Route
             Map<Integer, Integer> sortedMap = sortByValue(route_dangerLevel);
