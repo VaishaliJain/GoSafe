@@ -358,8 +358,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             navigationRoute = null;
             originMarker = mMap.addMarker(new MarkerOptions()
                                 .position(origin)
-                                .icon(getMarkerIcon("#DB7093"))
+                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
                                 .title("Origin"));
+            // .icon(getMarkerIcon("#DB7093"))
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             builder.include(originMarker.getPosition());
             builder.include(destinationMarker.getPosition());
@@ -759,57 +760,81 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         
         switch (view.getId()) {
             case R.id.accident_toggle: {
-                if (showNewspaperMarkers[0])
+                if (showNewspaperMarkers[0]) {
                     for (Marker marker : newspaperMarkers.get("accident"))
                         marker.setVisible(true);
-                else
+                    accident_toggle.setAlpha(100);
+                }
+                else {
                     for (Marker marker : newspaperMarkers.get("accident"))
                         marker.setVisible(false);
+                    accident_toggle.setAlpha(255);
+                }
                 break;
             }
             case R.id.harrassment_toggle: {
-                if (showNewspaperMarkers[1])
+                if (showNewspaperMarkers[1]) {
                     for (Marker marker : newspaperMarkers.get("harrassment"))
                         marker.setVisible(true);
-                else
+                    harrassment_toggle.setAlpha(100);
+                }
+                else {
                     for (Marker marker : newspaperMarkers.get("harrassment"))
                         marker.setVisible(false);
+                    harrassment_toggle.setAlpha(255);
+                }
                 break;
             }
             case R.id.light_toggle: {
-                if (showNewspaperMarkers[2])
+                if (showNewspaperMarkers[2]) {
                     for (Marker marker : newspaperMarkers.get("light"))
                         marker.setVisible(true);
-                else
+                    light_toggle.setAlpha(100);
+                }
+                else {
                     for (Marker marker : newspaperMarkers.get("light"))
                         marker.setVisible(false);
+                    light_toggle.setAlpha(255);
+                }
                 break;
             }
             case R.id.police_toggle: {
-                if (showNewspaperMarkers[3])
+                if (showNewspaperMarkers[3]) {
                     for (Marker marker : newspaperMarkers.get("police"))
                         marker.setVisible(true);
-                else
+                    police_toggle.setAlpha(100);
+                }
+                else {
                     for (Marker marker : newspaperMarkers.get("police"))
                         marker.setVisible(false);
+                    police_toggle.setAlpha(255);
+                }
                 break;
             }
             case R.id.theft_toggle: {
-                if (showNewspaperMarkers[4])
+                if (showNewspaperMarkers[4]) {
                     for (Marker marker : newspaperMarkers.get("theft"))
                         marker.setVisible(true);
-                else
+                    theft_toggle.setAlpha(100);
+                }
+                else {
                     for (Marker marker : newspaperMarkers.get("theft"))
                         marker.setVisible(false);
+                    theft_toggle.setAlpha(255);
+                }
                 break;
             }
             case R.id.camera_toggle: {
-                if (showNewspaperMarkers[5])
+                if (showNewspaperMarkers[5]) {
                     for (Marker marker : newspaperMarkers.get("camera"))
                         marker.setVisible(true);
-                else
+                    camera_toggle.setAlpha(100);
+                }
+                else {
                     for (Marker marker : newspaperMarkers.get("camera"))
                         marker.setVisible(false);
+                    camera_toggle.setAlpha(255);
+                }
                 break;
             }
             default:

@@ -25,11 +25,9 @@ public class UserFormActivity extends AppCompatActivity implements View.OnClickL
             // upload data to server
             Toast toast = Toast.makeText(getApplicationContext(), "Thank you for your feedback!", Toast.LENGTH_SHORT);
             toast.show();
-            Intent intent = new Intent(UserFormActivity.this, MapsActivity.class);
-            startActivity(intent);
+            finish();
         } else if (view.equals(findViewById(R.id.cancel))) {
-            Intent intent = new Intent(UserFormActivity.this, MapsActivity.class);
-            startActivity(intent);
+            finish();
         }
     }
 }
