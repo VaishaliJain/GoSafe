@@ -143,7 +143,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         getCurrentLocationAndMarkIt();
-
+        new LoadData().execute();
+        Toast toast = Toast.makeText(getApplicationContext(), "Loading data. Please wait", Toast.LENGTH_LONG);
+        toast.show();
         try {
             harrassment_toggle = findViewById(R.id.harrassment_toggle);
             harrassment_toggle.setOnClickListener(this);
@@ -170,7 +172,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             choice_toggle = findViewById(R.id.choice_toggle);
             choice_toggle.setOnClickListener(this);
 
-            putCustomMarkers();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -357,9 +358,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 navigationRoute.remove();
             navigationRoute = null;
             originMarker = mMap.addMarker(new MarkerOptions()
-                                .position(origin)
-                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
-                                .title("Origin"));
+                    .position(origin)
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_MAGENTA))
+                    .title("Origin"));
             // .icon(getMarkerIcon("#DB7093"))
             LatLngBounds.Builder builder = new LatLngBounds.Builder();
             builder.include(originMarker.getPosition());
@@ -417,9 +418,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     currentLocationMarker.setPosition(currentLocation);
                 else
                     currentLocationMarker = mMap.addMarker(new MarkerOptions()
-                                                .position(currentLocation)
-                                                .title("You are here")
-                                                .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
+                            .position(currentLocation)
+                            .title("You are here")
+                            .icon(BitmapDescriptorFactory.fromResource(R.drawable.locationicon)));
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 mLocationManager.removeUpdates(mLocationListener);
             }
@@ -440,10 +441,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void drawMarkerAtDestination(LatLng location) {
         destinationMarker = mMap.addMarker(new MarkerOptions()
-                                .position(location)
-                                .title("Destination")
-                                .icon(getMarkerIcon("#DB7093"))
-                                .draggable(true));
+                .position(location)
+                .title("Destination")
+                .icon(getMarkerIcon("#DB7093"))
+                .draggable(true));
         if (!isNavigate) {
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 12));
         } else {
@@ -468,17 +469,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                     LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, mLocationListener);
             location = mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-        }
-        else
-            Toast.makeText(getApplicationContext(),"Please turn ON your Internet and Restart app.",Toast.LENGTH_SHORT).show();
+        } else
+            Toast.makeText(getApplicationContext(), "Please turn ON your Internet and Restart app.", Toast.LENGTH_SHORT).show();
 
         if (isGPSEnabled) {
             mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                     LOCATION_UPDATE_MIN_TIME, LOCATION_UPDATE_MIN_DISTANCE, mLocationListener);
             location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        }
-        else
-            Toast.makeText(getApplicationContext(),"Please turn ON your Location and Restart app.",Toast.LENGTH_SHORT).show();
+        } else
+            Toast.makeText(getApplicationContext(), "Please turn ON your Location and Restart app.", Toast.LENGTH_SHORT).show();
 
         if (location != null) {
             currentLocation = new LatLng(location.getLatitude(), location.getLongitude());
@@ -496,8 +495,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         return BitmapDescriptorFactory.defaultMarker(hsv[0]);
     }
 
-    private void putCustomMarkers() throws IOException
-    {
+    private void putCustomMarkers() throws IOException {
         Map<Integer, String> resourceIdToIssue = new HashMap<>();
         resourceIdToIssue.put(R.raw.accident, "accident");
         resourceIdToIssue.put(R.raw.police, "police");
@@ -508,20 +506,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Resources r = getResources();
 
-        for (int id : resourceIdToIssue.keySet())
-        {
+        for (int id : resourceIdToIssue.keySet()) {
             InputStream in = r.openRawResource(id);
             BufferedReader reader = new BufferedReader(new InputStreamReader(in));
             String line;
             List<Marker> issueMarkers = new ArrayList<>();
 
-            while ((line = reader.readLine()) != null)
-            {
+            while ((line = reader.readLine()) != null) {
                 LatLng coordinates = getCoordinatesFromAddress(line);
                 Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
 
-                switch (id)
-                {
+                switch (id) {
                     case R.raw.accident:
                         marker.setTitle("Accident");
                         marker.setIcon(getMarkerIcon("#ffaa66cc"));
@@ -683,7 +678,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         @Override
         protected void onPostExecute(List<List<HashMap<String, String>>> result) {
 
-            if(result == null)
+            if (result == null)
                 return;
 
             ArrayList<LatLng> safePoints = new ArrayList<>();
@@ -691,8 +686,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             PolylineOptions safeOptions = new PolylineOptions();
             HashMap<Integer, Integer> route_dangerLevel = new HashMap<>();
             // Traversing through all the routes
-            for (int i = 0; i < result.size(); i++)
-            {
+            for (int i = 0; i < result.size(); i++) {
                 ArrayList<LatLng> points = new ArrayList<>();
                 int danger_count = 0, safety_count = 0;
                 List<HashMap<String, String>> path = result.get(i);
@@ -707,7 +701,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     danger_count += getRouteDangerLevel(position, 1000);
                     safety_count += getRouteSafetyLevel(position, 500);
 
-                    if(i==0)
+                    if (i == 0)
                         points.add(position);
                 }
                 route_dangerLevel.put(i, danger_count - safety_count);
@@ -724,7 +718,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
 
-            if(route_dangerLevel == null)
+            if (route_dangerLevel == null)
                 return;
 
             //Get the Safest Route
@@ -755,17 +749,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void toggleNewsMarkers(View view) {
 
-        if(newspaperMarkers == null)
+        if (newspaperMarkers == null)
             return;
-        
+
         switch (view.getId()) {
             case R.id.accident_toggle: {
                 if (showNewspaperMarkers[0]) {
                     for (Marker marker : newspaperMarkers.get("accident"))
                         marker.setVisible(true);
                     accident_toggle.setAlpha(100);
-                }
-                else {
+                } else {
                     for (Marker marker : newspaperMarkers.get("accident"))
                         marker.setVisible(false);
                     accident_toggle.setAlpha(255);
@@ -777,8 +770,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     for (Marker marker : newspaperMarkers.get("harrassment"))
                         marker.setVisible(true);
                     harrassment_toggle.setAlpha(100);
-                }
-                else {
+                } else {
                     for (Marker marker : newspaperMarkers.get("harrassment"))
                         marker.setVisible(false);
                     harrassment_toggle.setAlpha(255);
@@ -790,8 +782,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     for (Marker marker : newspaperMarkers.get("light"))
                         marker.setVisible(true);
                     light_toggle.setAlpha(100);
-                }
-                else {
+                } else {
                     for (Marker marker : newspaperMarkers.get("light"))
                         marker.setVisible(false);
                     light_toggle.setAlpha(255);
@@ -803,8 +794,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     for (Marker marker : newspaperMarkers.get("police"))
                         marker.setVisible(true);
                     police_toggle.setAlpha(100);
-                }
-                else {
+                } else {
                     for (Marker marker : newspaperMarkers.get("police"))
                         marker.setVisible(false);
                     police_toggle.setAlpha(255);
@@ -816,8 +806,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     for (Marker marker : newspaperMarkers.get("theft"))
                         marker.setVisible(true);
                     theft_toggle.setAlpha(100);
-                }
-                else {
+                } else {
                     for (Marker marker : newspaperMarkers.get("theft"))
                         marker.setVisible(false);
                     theft_toggle.setAlpha(255);
@@ -829,8 +818,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     for (Marker marker : newspaperMarkers.get("camera"))
                         marker.setVisible(true);
                     camera_toggle.setAlpha(100);
-                }
-                else {
+                } else {
                     for (Marker marker : newspaperMarkers.get("camera"))
                         marker.setVisible(false);
                     camera_toggle.setAlpha(255);
@@ -844,8 +832,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private int getRouteDangerLevel(LatLng queryPoint, double radius) {
 
-        if(newspaperMarkers == null || !newspaperMarkers.containsKey("accident") || !newspaperMarkers.containsKey("theft")
-                                 || !newspaperMarkers.containsKey("harrassment") || !newspaperMarkers.containsKey("light"))
+        if (newspaperMarkers == null || !newspaperMarkers.containsKey("accident") || !newspaperMarkers.containsKey("theft")
+                || !newspaperMarkers.containsKey("harrassment") || !newspaperMarkers.containsKey("light"))
             return Integer.MAX_VALUE;
 
         int accidents = 0, theft = 0, harassment = 0, light = 0;
@@ -878,13 +866,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             if (results[0] < radius)
                 light++;
         }
-        
+
         return (accidents * Accident_Weight + theft * Robbery_Weight + harassment * Harassment_Weight + light * Light_Weight);
     }
 
     private int getRouteSafetyLevel(LatLng queryPoint, double radius) {
 
-        if(newspaperMarkers == null || !newspaperMarkers.containsKey("police") || !newspaperMarkers.containsKey("camera"))
+        if (newspaperMarkers == null || !newspaperMarkers.containsKey("police") || !newspaperMarkers.containsKey("camera"))
             return Integer.MIN_VALUE;
         int police = 0, camera = 0;
 
@@ -924,4 +912,101 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         return sortedMap;
     }
+
+    class LoadData extends AsyncTask<GoogleMap, Integer, Integer> {
+
+        private Map<String, List<LatLng>> storeData = new HashMap<>();
+
+        protected Integer doInBackground(GoogleMap... mmap) {
+            Map<Integer, String> resourceIdToIssue = new HashMap<>();
+            resourceIdToIssue.put(R.raw.accident, "accident");
+            resourceIdToIssue.put(R.raw.police, "police");
+            resourceIdToIssue.put(R.raw.harrassment, "harrassment");
+            resourceIdToIssue.put(R.raw.theft, "theft");
+            resourceIdToIssue.put(R.raw.light, "light");
+            resourceIdToIssue.put(R.raw.camera, "camera");
+
+            Resources r = getResources();
+
+            for (int id : resourceIdToIssue.keySet()) {
+                InputStream in = r.openRawResource(id);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                String line;
+                List<LatLng> issueMarkers = new ArrayList<>();
+                try {
+                    while ((line = reader.readLine()) != null) {
+                        LatLng coordinates = getCoordinatesFromAddress(line);
+                        issueMarkers.add(coordinates);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                storeData.put(resourceIdToIssue.get(id), issueMarkers);
+            }
+            return 1;
+        }
+
+        protected void onPostExecute(Integer result) {
+            for (Map.Entry<String, List<LatLng>> entry : storeData.entrySet()) {
+                List<Marker> issueMarkers = new ArrayList<>();
+                switch (entry.getKey()) {
+                    case "accident":
+                        for (LatLng coordinates : entry.getValue()) {
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
+                            marker.setTitle("Accident");
+                            marker.setIcon(getMarkerIcon("#ffaa66cc"));
+                            issueMarkers.add(marker);
+                        }
+                        break;
+                    case "harrassment":
+                        for (LatLng coordinates : entry.getValue()) {
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
+                            marker.setTitle("Harrassment");
+                            marker.setIcon(getMarkerIcon("#FF4560F2"));
+                            issueMarkers.add(marker);
+                        }
+                        break;
+                    case "light":
+                        for (LatLng coordinates : entry.getValue()) {
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
+                            marker.setTitle("No street lights");
+                            marker.setIcon(getMarkerIcon("#FFFF00"));
+                            issueMarkers.add(marker);
+                        }
+                        break;
+                    case "police":
+                        for (LatLng coordinates : entry.getValue()) {
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
+                            marker.setTitle("Police present");
+                            marker.setIcon(getMarkerIcon("#ff669900"));
+                            issueMarkers.add(marker);
+                        }
+                        break;
+                    case "theft":
+                        for (LatLng coordinates : entry.getValue()) {
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
+                            marker.setTitle("Theft");
+                            marker.setIcon(getMarkerIcon("#8B4513"));
+                            issueMarkers.add(marker);
+                        }
+                        break;
+                    case "camera":
+                        for (LatLng coordinates : entry.getValue()) {
+                            Marker marker = mMap.addMarker(new MarkerOptions().position(coordinates).visible(false));
+                            marker.setTitle("Camera");
+                            marker.setIcon(getMarkerIcon("#ff00ddff"));
+                            issueMarkers.add(marker);
+                        }
+                        break;
+                    default:
+                        System.out.println("Invalid issue found");
+                }
+                newspaperMarkers.put(entry.getKey(), issueMarkers);
+                issueMarkers = null;
+            }
+            Toast toast = Toast.makeText(getApplicationContext(), "Data retrieved successfully.", Toast.LENGTH_SHORT);
+            toast.show();
+        }
+    }
 }
+
