@@ -1,5 +1,4 @@
 Dasarahalli flyover, Peenya, Bangalore
-Davanagere, Bangalore
 Kamanahalli, east Bangalore, Bangalore
 Nagarbhavi flyover, Bangalore
 Subbannapalya, Bangalore
@@ -13,3 +12,7 @@ Mahipalpur flyover, South Delhi, Delhi
 phase 3, East Delhi, Delhi
 Subhash Nagar, Delhi
 Prithviraj Road and Aurobindo Chowk cross-section, Delhi
+Dhaula Kuan Bus stop, Delhi
+Main Crossing Rajouri Garden, Delhi
+RK Puram sector-13, Ring Road, Delhi
+Nanakpura Gurudwara, Moti Bagh, Delhi
