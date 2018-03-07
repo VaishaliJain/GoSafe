@@ -57,6 +57,7 @@
                 android:layout_marginLeft="21dp"
                 android:layout_marginStart="21dp"
                 android:clickable="true"
+                android:visibility="gone"
                 app:backgroundTint="@color/colorAccent"
                 app:fabSize="normal"
                 app:srcCompat="@drawable/show_menu"

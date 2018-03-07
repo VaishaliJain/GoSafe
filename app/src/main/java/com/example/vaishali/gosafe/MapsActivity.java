@@ -1004,6 +1004,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 newspaperMarkers.put(entry.getKey(), issueMarkers);
                 issueMarkers = null;
             }
+            choice_toggle.setVisibility(View.VISIBLE);
             Toast toast = Toast.makeText(getApplicationContext(), "Data retrieved successfully.", Toast.LENGTH_SHORT);
             toast.show();
         }
