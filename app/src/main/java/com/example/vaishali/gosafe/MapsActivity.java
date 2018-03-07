@@ -192,7 +192,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             safeRoute = null;
             if (destinationMarker != null)
                 destinationMarker.remove();
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+            if(currentLocation != null)
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
             view.setVisibility(View.GONE);
         } else if (view.equals(placeAutocompleteClearFrom)) {
             autocompleteFragmentFrom.setText("");
@@ -204,7 +205,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             safeRoute = null;
             if (originMarker != null)
                 originMarker.remove();
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+            if(currentLocation != null)
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
             view.setVisibility(View.GONE);
         } else if (view.equals(findViewById(R.id.navigate_button))) {
             isNavigate = !isNavigate;
@@ -232,7 +234,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     destinationMarker.remove();
                 if (originMarker != null)
                     originMarker.remove();
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
+                if(currentLocation != null)
+                    mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentLocation, 12));
                 view.setVisibility(View.GONE);
             }
         } else if (view.equals(findViewById(R.id.accident_toggle))) {
